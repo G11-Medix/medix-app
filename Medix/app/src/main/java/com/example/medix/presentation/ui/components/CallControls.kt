@@ -1,0 +1,57 @@
+package com.example.medix.presentation.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+
+import androidx.compose.material3.*
+
+import androidx.compose.runtime.*
+
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+import kotlinx.coroutines.delay
+@Composable
+fun CallControls() {
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        ControlButton(Icons.Default.MicOff, "Mute")
+        ControlButton(Icons.Default.VolumeUp, "Speaker")
+    }
+}
+
+@Composable
+fun ControlButton(icon: ImageVector, label: String) {
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .background(Color.LightGray, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null)
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(label, fontSize = 10.sp)
+    }
+}
