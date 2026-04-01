@@ -16,14 +16,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.medix.presentation.viewmodels.status.ConversationStatus
 
 @Composable
-fun ActiveSessionHeader(state: String) {
+fun ActiveSessionHeader(status: ConversationStatus) {
 
-    val color = when (state) {
-        "Listening" -> Color.Green
-        "Speaking" -> Color(0xFF1E88E5)
-        else -> Color.Gray
+    val (color, title) = when (status) {
+        ConversationStatus.LISTENING -> Color.Green to "Escuchando..."
+        ConversationStatus.RESPONDING -> Color(0xFF1E88E5) to "Hablando..."
+        ConversationStatus.PROCESSING -> Color(0xFFFFA000) to "Procesando..."
+        ConversationStatus.ERROR -> Color.Red to "Error"
+        else -> Color.Gray to "Conectando..."
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -53,7 +56,7 @@ fun ActiveSessionHeader(state: String) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Llamando a Medix...",
+            text = title,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp
         )

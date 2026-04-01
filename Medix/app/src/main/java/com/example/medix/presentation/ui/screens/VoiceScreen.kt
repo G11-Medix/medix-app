@@ -1,42 +1,64 @@
 package com.example.medix.presentation.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 
 import androidx.compose.runtime.*
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.medix.presentation.ui.components.voice.ActiveSessionHeader
-import com.example.medix.presentation.ui.components.voice.AudioVisualizer
-import com.example.medix.presentation.ui.components.voice.CallControls
-import com.example.medix.presentation.ui.components.voice.EndCallButton
-import com.example.medix.presentation.ui.components.voice.TopBar
-import com.example.medix.presentation.ui.components.voice.TranscriptCard
 
-import kotlinx.coroutines.delay
+import androidx.core.content.ContextCompat
+
+import com.example.medix.presentation.ui.components.voice.*
+import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 
 @Composable
 fun VoiceScreen(
+    viewModel: VoiceViewModel,
     onEndCall: () -> Unit
 ) {
 
-    var callState by remember { mutableStateOf("Connecting") }
-    var transcript by remember { mutableStateOf("") }
+    // Permisos
+
+    val context = LocalContext.current
+
+    var hasMicPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasMicPermission = granted
+    }
 
     LaunchedEffect(Unit) {
-        delay(2000)
-        callState = "Listening"
-
-        delay(3000)
-        callState = "Speaking"
-        transcript = "Me gustaría programar una cita..."
-
-        delay(4000)
-        transcript = "con el Dr. Smith para el próximo martes..."
+        if (!hasMicPermission) {
+            launcher.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
+
+    // Estado
+
+    val state by viewModel.uiState.collectAsState()
+    val isMuted by viewModel.isMuted.collectAsState()
+    val isSpeakerOn by viewModel.isSpeakerOn.collectAsState()
 
     Column(
         modifier = Modifier
@@ -50,22 +72,67 @@ fun VoiceScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ActiveSessionHeader(callState)
+        ActiveSessionHeader(state.status)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        AudioVisualizer(callState)
+        AudioVisualizer(state.status)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        TranscriptCard(transcript)
+        TranscriptCard(
+            "Tu mensaje:",
+            state.userText.ifBlank { "Aún no hay transcripción" }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        TranscriptCard(
+            "Asistente Medix:",
+            state.assistantText
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
-        CallControls()
+        if (!hasMicPermission) {
+            Text(
+                text = "Debes conceder permiso de micrófono",
+                color = Color.Red
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    launcher.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            ) {
+                Text("Conceder permiso")
+            }
+        }
+
+        CallControls(
+            isMuted = isMuted,
+            isSpeakerOn = isSpeakerOn,
+            onMute = {
+                if (hasMicPermission) {
+                    viewModel.toggleMute()
+                } else {
+                    launcher.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            },
+            onSpeaker = {
+                viewModel.toggleSpeaker()
+            }
+        )
 
         EndCallButton(
-            onEndCall = onEndCall
+            onEndCall = {
+                if (hasMicPermission) {
+                    viewModel.stopRecordingAndSend()
+                }
+                onEndCall()
+            }
         )
     }
 }

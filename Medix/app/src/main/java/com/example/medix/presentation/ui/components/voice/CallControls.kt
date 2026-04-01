@@ -1,6 +1,7 @@
 package com.example.medix.presentation.ui.components.voice
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 
@@ -19,27 +20,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun CallControls() {
+fun CallControls(
+    isMuted: Boolean,
+    isSpeakerOn: Boolean,
+    onMute: () -> Unit,
+    onSpeaker: () -> Unit
+) {
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.fillMaxWidth()
     ) {
 
-        ControlButton(Icons.Default.MicOff, "Mute")
-        ControlButton(Icons.Default.VolumeUp, "Speaker")
+        ControlButton(Icons.Default.MicOff, "Mute", onMute)
+        ControlButton(Icons.Default.VolumeUp, "Speaker", onSpeaker)
     }
 }
 
 @Composable
-fun ControlButton(icon: ImageVector, label: String) {
+fun ControlButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         Box(
             modifier = Modifier
                 .size(50.dp)
-                .background(Color.LightGray, CircleShape),
+                .background(Color.LightGray, CircleShape)
+                .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {
             Icon(icon, contentDescription = null)

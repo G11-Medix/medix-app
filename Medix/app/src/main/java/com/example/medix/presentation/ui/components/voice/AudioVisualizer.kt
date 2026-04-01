@@ -8,11 +8,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.medix.presentation.viewmodels.status.ConversationStatus
 
 @Composable
-fun AudioVisualizer(state: String) {
+fun AudioVisualizer(status: ConversationStatus) {
 
-    val bars = if (state == "Speaking") 8 else 3
+    val bars = when (status) {
+        ConversationStatus.RESPONDING -> 8
+        ConversationStatus.LISTENING -> 5
+        else -> 3
+    }
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),

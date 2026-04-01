@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TranscriptCard(text: String) {
+fun TranscriptCard(title:String, text: String) {
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -23,7 +23,7 @@ fun TranscriptCard(text: String) {
         Column(modifier = Modifier.padding(16.dp)) {
 
             Text(
-                text = " Lo que escuche",
+                text = "\"$title\"",
                 fontSize = 10.sp,
                 color = Color(0xFF1E88E5)
             )
