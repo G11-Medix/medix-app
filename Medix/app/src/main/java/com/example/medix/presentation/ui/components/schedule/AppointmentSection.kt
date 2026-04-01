@@ -1,4 +1,4 @@
-package com.example.medix.presentation.ui.components
+package com.example.medix.presentation.ui.components.schedule
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import com.example.medix.presentation.ui.components.records.AppointmentCard
 
 @Composable
 fun AppointmentSection() {

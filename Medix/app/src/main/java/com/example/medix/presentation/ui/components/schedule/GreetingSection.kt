@@ -1,4 +1,4 @@
-package com.example.medix.presentation.ui.components
+package com.example.medix.presentation.ui.components.schedule
 
 
 import androidx.compose.foundation.layout.*

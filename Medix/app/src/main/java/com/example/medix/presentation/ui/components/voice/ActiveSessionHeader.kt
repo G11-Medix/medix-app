@@ -1,8 +1,7 @@
-package com.example.medix.presentation.ui.components
+package com.example.medix.presentation.ui.components.voice
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -13,15 +12,11 @@ import androidx.compose.runtime.*
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-import kotlinx.coroutines.delay
 @Composable
 fun ActiveSessionHeader(state: String) {
 

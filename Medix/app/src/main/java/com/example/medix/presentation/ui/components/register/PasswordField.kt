@@ -1,4 +1,4 @@
-package com.example.medix.presentation.ui.components
+package com.example.medix.presentation.ui.components.register
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons

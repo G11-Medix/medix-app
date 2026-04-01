@@ -1,5 +1,4 @@
-package com.example.medix.presentation.ui.components
-import androidx.compose.foundation.background
+package com.example.medix.presentation.ui.components.confirmation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 
@@ -17,10 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-
-
-import java.text.SimpleDateFormat
-import java.util.*
 @Composable
 fun AppointmentInfoCard() {
 

@@ -14,10 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-import com.example.medix.presentation.ui.components.AppointmentInfoCard
-import com.example.medix.presentation.ui.components.OpenStreetMapView
-import com.example.medix.presentation.ui.components.SuccessHeader
-import com.example.medix.presentation.ui.components.TopBarConfirmation
+import com.example.medix.presentation.ui.components.confirmation.AppointmentInfoCard
+import com.example.medix.presentation.ui.components.confirmation.OpenStreetMapView
+import com.example.medix.presentation.ui.components.confirmation.SuccessHeader
+import com.example.medix.presentation.ui.components.confirmation.TopBarConfirmation
 
 @Composable
 fun ConfirmationScreen(

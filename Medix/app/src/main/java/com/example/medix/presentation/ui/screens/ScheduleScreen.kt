@@ -2,12 +2,15 @@ package com.example.medix.presentation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.medix.presentation.ui.components.*
+import com.example.medix.presentation.ui.components.HeaderSection
+import com.example.medix.presentation.ui.components.schedule.AppointmentSection
+import com.example.medix.presentation.ui.components.schedule.GreetingSection
+import com.example.medix.presentation.ui.components.schedule.VoiceCard
 
 @Composable
 fun ScheduleScreen(

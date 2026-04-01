@@ -2,28 +2,21 @@ package com.example.medix.presentation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 
 import androidx.compose.material3.*
 
 import androidx.compose.runtime.Composable
 
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-import androidx.navigation.NavController
-import com.example.medix.presentation.ui.components.AppointmentCard
+import com.example.medix.presentation.ui.components.records.AppointmentCard
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.HeaderSection
-import com.example.medix.presentation.ui.components.PastAppointmentCard
+import com.example.medix.presentation.ui.components.records.PastAppointmentCard
 import com.example.medix.presentation.ui.components.SectionTitle
 
 @Composable

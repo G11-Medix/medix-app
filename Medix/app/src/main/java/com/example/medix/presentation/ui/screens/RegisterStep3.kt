@@ -8,7 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.medix.presentation.ui.components.PasswordField
+import com.example.medix.presentation.ui.components.register.PasswordField
 
 @Composable
 fun RegisterStep3(onCreate: () -> Unit, onBack: () -> Unit) {

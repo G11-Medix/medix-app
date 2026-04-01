@@ -1,10 +1,7 @@
-package com.example.medix.presentation.ui.components
-import androidx.compose.foundation.background
+package com.example.medix.presentation.ui.components.profile
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 
 import androidx.compose.material3.*
 
@@ -18,11 +15,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 @Composable
-fun InfoCardWithStatus(
+fun InfoCardWithButton(
     icon: ImageVector,
     title: String,
     value: String,
-    status: String
+    buttonText: String
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -45,13 +42,12 @@ fun InfoCardWithStatus(
                 Text(value, fontWeight = FontWeight.Bold)
             }
 
-            AssistChip(
+            Button(
                 onClick = {},
-                label = { Text(status) },
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = Color(0xFFC8E6C9)
-                )
-            )
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(buttonText)
+            }
         }
     }
 }

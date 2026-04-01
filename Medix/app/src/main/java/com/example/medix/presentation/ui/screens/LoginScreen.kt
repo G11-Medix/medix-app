@@ -14,11 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.medix.presentation.ui.components.PasswordField
+import com.example.medix.presentation.ui.components.register.PasswordField
 import com.example.medix.presentation.ui.theme.PrimaryBlue
 @Composable
 fun LoginScreen(

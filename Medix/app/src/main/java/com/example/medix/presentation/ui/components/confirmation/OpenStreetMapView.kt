@@ -1,4 +1,4 @@
-package com.example.medix.presentation.ui.components
+package com.example.medix.presentation.ui.components.confirmation
 
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxSize

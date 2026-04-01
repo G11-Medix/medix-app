@@ -1,10 +1,6 @@
-package com.example.medix.presentation.ui.components
-import androidx.compose.foundation.background
+package com.example.medix.presentation.ui.components.profile
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 
 import androidx.compose.material3.*
 
