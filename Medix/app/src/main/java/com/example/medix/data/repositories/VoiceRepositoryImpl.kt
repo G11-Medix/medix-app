@@ -1,7 +1,6 @@
 package com.example.medix.data.repositories
 
-
-
+import android.util.Log
 import com.example.medix.core.network.ApiService
 import com.example.medix.core.network.WebSocketClient
 import com.example.medix.core.utils.Constants
@@ -20,28 +19,38 @@ class VoiceRepositoryImpl(
 ) : VoiceRepository {
 
     override suspend fun transcribeAudio(audioFile: File): String {
-        val requestBody = audioFile
-            .asRequestBody("audio/mp4".toMediaType())
+        Log.d("VoiceRepository", "Transcribing audio: ${audioFile.name}, size: ${audioFile.length()} bytes")
+        val requestBody = audioFile.asRequestBody("audio/mp4".toMediaType())
+        val part = MultipartBody.Part.createFormData("file", audioFile.name, requestBody)
 
-        val part = MultipartBody.Part.createFormData(
-            "audio",
-            audioFile.name,
-            requestBody
-        )
-
-        return apiService.transcribeAudio(part).text
+        return try {
+            val response = apiService.transcribeAudio(part)
+            Log.i("VoiceRepository", "Transcription success: ${response.text.take(50)}")
+            response.text
+        } catch (e: Exception) {
+            Log.e("VoiceRepository", "Transcription failed", e)
+            throw e
+        }
     }
 
     override suspend fun sendConversationMessage(
         text: String,
         sessionId: String
     ): ConversationResponse {
-        return apiService.sendMessage(
-            ConversationRequest(
-                text = text,
-                session_id = sessionId
-            )
+        Log.d("VoiceRepository", "Sending conversation message: '${text.take(50)}', sessionId: $sessionId")
+        val request = ConversationRequest(
+            text = text,
+            session_id = sessionId
         )
+
+        return try {
+            val response = apiService.sendMessage(request)
+            Log.i("VoiceRepository", "Conversation response: '${response.response.take(50)}...', completed: ${response.completed}")
+            response
+        } catch (e: Exception) {
+            Log.e("VoiceRepository", "Conversation request failed", e)
+            throw e
+        }
     }
 
     override fun connectWebSocket(
@@ -49,26 +58,43 @@ class VoiceRepositoryImpl(
         onMessage: (String) -> Unit,
         onStateChanged: (Boolean) -> Unit,
     ) {
+        val url = Constants.webSocketUrl(sessionId)
+        Log.d("VoiceRepository", "Connecting WebSocket: $url")
+
         webSocketClient.connect(
-            Constants.webSocketUrl(sessionId),
-            onMessage,
-            onStateChanged
+            url,
+            onMessage = { payload ->
+                Log.d("VoiceRepository", "WebSocket message handler called")
+                onMessage(payload)
+            },
+            onStateChanged = { connected ->
+                Log.i("VoiceRepository", "WebSocket state: $connected")
+                onStateChanged(connected)
+            }
         )
     }
 
     override fun sendWebSocketMessage(
         text: String,
         sessionId: String
-    ) {
+    ): Boolean {
+        Log.d("VoiceRepository", "Sending WebSocket message: '${text.take(50)}', sessionId: $sessionId")
         val payload = JSONObject()
             .put("text", text)
             .put("session_id", sessionId)
             .toString()
 
-        webSocketClient.send(payload)
+        val success = webSocketClient.send(payload)
+        if (success) {
+            Log.i("VoiceRepository", "WebSocket message sent successfully")
+        } else {
+            Log.w("VoiceRepository", "WebSocket message send failed (WebSocket not ready)")
+        }
+        return success
     }
 
     override fun closeWebSocket() {
+        Log.d("VoiceRepository", "Closing WebSocket")
         webSocketClient.close()
     }
 }

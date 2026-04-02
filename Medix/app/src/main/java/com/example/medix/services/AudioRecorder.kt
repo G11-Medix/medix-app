@@ -10,13 +10,21 @@ class AudioRecorder(private val context: Context) {
     private var recorder: MediaRecorder? = null
     private var outputFile: File? = null
 
-    private var isPaused = false
-
     fun start(): File {
+        // Si había una sesión previa incompleta, limpiarla antes de iniciar otra.
+        releaseRecorder()
+
         val file = File.createTempFile("medix_record_", ".m4a", context.cacheDir)
         outputFile = file
 
-        recorder = MediaRecorder(context).apply {
+        val mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(context)
+        } else {
+            @Suppress("DEPRECATION")
+            MediaRecorder()
+        }
+
+        recorder = mediaRecorder.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
@@ -27,57 +35,33 @@ class AudioRecorder(private val context: Context) {
             start()
         }
 
-        isPaused = false
         return file
     }
 
     fun stop(): File? {
+        val currentRecorder = recorder ?: return null
+        val file = outputFile
+
         return try {
-            recorder?.apply {
-                stop()
-                release()
-            }
-            outputFile
+            currentRecorder.stop()
+            file?.takeIf { it.exists() && it.length() > 0L }
         } catch (_: Exception) {
+            // Si stop() falla (p.ej. grabacion demasiado corta), descartar el archivo.
+            file?.delete()
             null
         } finally {
-            recorder = null
-            isPaused = false
+            releaseRecorder()
+            outputFile = null
         }
     }
 
-    fun mute() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            recorder?.let {
-                if (!isPaused) {
-                    runCatching {
-                        it.pause()
-                        isPaused = true
-                    }
-                }
-            }
-        }
-    }
+    fun mute() = Unit
 
-    fun unmute() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            recorder?.let {
-                if (isPaused) {
-                    runCatching {
-                        it.resume()
-                        isPaused = false
-                    }
-                }
-            }
-        }
-    }
+    fun unmute() = Unit
 
-
-    fun isRecording(): Boolean {
-        return recorder != null && !isPaused
-    }
-
-    fun isMuted(): Boolean {
-        return isPaused
+    private fun releaseRecorder() {
+        runCatching { recorder?.reset() }
+        runCatching { recorder?.release() }
+        recorder = null
     }
 }
