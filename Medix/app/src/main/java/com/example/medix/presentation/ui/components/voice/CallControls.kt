@@ -32,8 +32,19 @@ fun CallControls(
         modifier = Modifier.fillMaxWidth()
     ) {
 
-        ControlButton(Icons.Default.MicOff, "Mute", onMute)
-        ControlButton(Icons.Default.VolumeUp, "Speaker", onSpeaker)
+
+        ControlButton(
+            icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+            label = if (isMuted) "Activar" else "Silenciar",
+            onClick = onMute
+        )
+
+
+        ControlButton(
+            icon = if (isSpeakerOn) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
+            label = if (isSpeakerOn) "Altavoz" else "Altavoz",
+            onClick = onSpeaker
+        )
     }
 }
 
