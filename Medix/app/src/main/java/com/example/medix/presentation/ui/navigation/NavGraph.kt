@@ -3,42 +3,62 @@ package com.example.medix.presentation.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.*
-
-import com.example.medix.presentation.ui.screens.*
-import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
-import com.example.medix.presentation.viewmodels.voice.VoiceViewModelFactory
-
-
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.medix.BuildConfig
 import com.example.medix.core.network.ApiService
+import com.example.medix.core.network.PacienteApiService
+import com.example.medix.core.network.SupabaseProvider
 import com.example.medix.core.network.WebSocketClient
 import com.example.medix.core.utils.Constants
+import com.example.medix.data.repositories.AuthRepositoryImpl
+import com.example.medix.data.repositories.PacienteRepositoryImpl
+import com.example.medix.data.repositories.VoiceRepositoryImpl
+import com.example.medix.domain.repositories.PacienteRepository
 import com.example.medix.domain.repositories.VoiceRepository
+import com.example.medix.presentation.ui.screens.ConfirmationScreen
+import com.example.medix.presentation.ui.screens.LoginScreen
+import com.example.medix.presentation.ui.screens.NotificationsScreen
+import com.example.medix.presentation.ui.screens.ProfileScreen
+import com.example.medix.presentation.ui.screens.RecordsScreen
+import com.example.medix.presentation.ui.screens.RegisterStep1
+import com.example.medix.presentation.ui.screens.RegisterStep2
+import com.example.medix.presentation.ui.screens.RegisterStep3
+import com.example.medix.presentation.ui.screens.ScheduleScreen
+import com.example.medix.presentation.ui.screens.VoiceScreen
+import com.example.medix.presentation.viewmodels.auth.AuthViewModel
+import com.example.medix.presentation.viewmodels.auth.AuthViewModelFactory
+import com.example.medix.presentation.viewmodels.status.ConversationStatus
+import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
+import com.example.medix.presentation.viewmodels.voice.VoiceViewModelFactory
 import com.example.medix.services.AudioPlayer
 import com.example.medix.services.AudioRecorder
-
+import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
-import com.example.medix.data.repositories.VoiceRepositoryImpl
-import com.example.medix.presentation.viewmodels.status.ConversationStatus
 
 @Composable
 fun NavGraph() {
-
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(
+            authRepository = AuthRepositoryImpl(SupabaseProvider.createClientOrNull()),
+            pacienteRepository = providePacienteRepository(),
+        )
+    )
 
     NavHost(
         navController = navController,
         startDestination = "login"
     ) {
-
         composable("login") {
             LoginScreen(
-                onCreateAccount = { navController.navigate("register1") },
+                viewModel = authViewModel,
                 onLoginSuccess = {
                     navController.navigate("schedule") {
                         popUpTo("login") { inclusive = true }
@@ -50,25 +70,29 @@ fun NavGraph() {
 
         composable("register1") {
             RegisterStep1(
-                onNext = { navController.navigate("register2") }
+                viewModel = authViewModel,
+                onNext = { navController.navigate("register2") },
             )
         }
 
         composable("register2") {
             RegisterStep2(
+                viewModel = authViewModel,
                 onNext = { navController.navigate("register3") },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
             )
         }
 
         composable("register3") {
             RegisterStep3(
-                onCreate = {
+                viewModel = authViewModel,
+                onRegistrationSuccess = {
                     navController.navigate("schedule") {
-                        popUpTo("schedule") { inclusive = true }
+                        popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
             )
         }
 
@@ -87,10 +111,9 @@ fun NavGraph() {
         }
 
         composable("voice") {
-
-            val viewModel: VoiceViewModel = viewModel(
+            val voiceViewModel: VoiceViewModel = viewModel(
                 factory = VoiceViewModelFactory(
-                    repository = provideRepository(),
+                    repository = provideVoiceRepository(),
                     recorder = AudioRecorder(context),
                     player = AudioPlayer(context),
                     context = context
@@ -98,9 +121,9 @@ fun NavGraph() {
             )
 
             VoiceScreen(
-                viewModel = viewModel,
+                viewModel = voiceViewModel,
                 onEndCall = {
-                    if (viewModel.uiState.value.status == ConversationStatus.ERROR) {
+                    if (voiceViewModel.uiState.value.status == ConversationStatus.ERROR) {
                         navController.navigate("schedule") {
                             popUpTo("schedule") { inclusive = true }
                         }
@@ -160,8 +183,7 @@ fun NavGraph() {
     }
 }
 
-fun provideRepository(): VoiceRepository {
-
+fun provideVoiceRepository(): VoiceRepository {
     val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
@@ -182,5 +204,28 @@ fun provideRepository(): VoiceRepository {
     return VoiceRepositoryImpl(
         apiService = retrofit.create(ApiService::class.java),
         webSocketClient = WebSocketClient(okHttpClient),
+    )
+}
+
+fun providePacienteRepository(): PacienteRepository {
+    val logging = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
+
+    val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .connectTimeout(25, TimeUnit.SECONDS)
+        .readTimeout(25, TimeUnit.SECONDS)
+        .writeTimeout(25, TimeUnit.SECONDS)
+        .build()
+
+    val retrofit = Retrofit.Builder()
+        .baseUrl(BuildConfig.MEDIX_API_BASE_URL)
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    return PacienteRepositoryImpl(
+        apiService = retrofit.create(PacienteApiService::class.java),
     )
 }

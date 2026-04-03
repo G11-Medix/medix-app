@@ -9,46 +9,39 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.*
-import androidx.compose.foundation.clickable
+import com.example.medix.presentation.viewmodels.auth.AuthViewModel
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
-fun RegisterStep1(onNext: () -> Unit) {
-
-    var name by remember { mutableStateOf("") }
-    var document by remember { mutableStateOf("") }
-    var birth by remember { mutableStateOf("") }
+fun RegisterStep1(
+    viewModel: AuthViewModel,
+    onNext: () -> Unit,
+) {
+    val state by viewModel.uiState.collectAsState()
+    val form = state.pacienteForm
     var expanded by remember { mutableStateOf(false) }
-    var tipoDocumento by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-
         IconButton(onClick = {}) {
-            Icon(Icons.Default.ArrowBack, "")
+            Icon(Icons.Default.ArrowBack, contentDescription = null)
         }
 
-        Text("Crear Cuenta")
+        Text("Registro de paciente")
 
         Spacer(Modifier.height(8.dp))
 
@@ -56,66 +49,63 @@ fun RegisterStep1(onNext: () -> Unit) {
 
         Spacer(Modifier.height(24.dp))
 
-        Text("Información Personal")
+        Text("Información personal")
 
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Nombres y Apellidos") },
+            value = form.nombres,
+            onValueChange = {
+                viewModel.updatePacienteForm { current -> current.copy(nombres = it) }
+            },
+            label = { Text("Nombres") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 
         Spacer(Modifier.height(12.dp))
 
+        OutlinedTextField(
+            value = form.apellidos,
+            onValueChange = {
+                viewModel.updatePacienteForm { current -> current.copy(apellidos = it) }
+            },
+            label = { Text("Apellidos") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
 
+        Spacer(Modifier.height(12.dp))
 
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+        OutlinedTextField(
+            value = form.tipoDocumento,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Tipo de Documento") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Button(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth()
         ) {
+            Text("Seleccionar tipo de documento")
+        }
 
-            OutlinedTextField(
-                value = tipoDocumento,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Tipo de Documento") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            listOf("CC", "TI", "CE", "PA").forEach { tipo ->
                 DropdownMenuItem(
-                    text = { Text("CC") },
+                    text = { Text(tipo) },
                     onClick = {
-                        tipoDocumento = "CC"
-                        expanded = false
-                    }
-                )
-
-                DropdownMenuItem(
-                    text = { Text("CE") },
-                    onClick = {
-                        tipoDocumento = "CE"
-                        expanded = false
-                    }
-                )
-
-                DropdownMenuItem(
-                    text = { Text("TI") },
-                    onClick = {
-                        tipoDocumento = "TI"
+                        viewModel.updatePacienteForm { current ->
+                            current.copy(tipoDocumento = tipo)
+                        }
                         expanded = false
                     }
                 )
@@ -125,8 +115,10 @@ fun RegisterStep1(onNext: () -> Unit) {
         Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = document,
-            onValueChange = { document = it },
+            value = form.numeroDocumento,
+            onValueChange = {
+                viewModel.updatePacienteForm { current -> current.copy(numeroDocumento = it) }
+            },
             label = { Text("Número de Documento") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
@@ -134,7 +126,21 @@ fun RegisterStep1(onNext: () -> Unit) {
 
         Spacer(Modifier.height(12.dp))
 
-        BirthDateField()
+        OutlinedTextField(
+            value = form.fechaNacimiento,
+            onValueChange = {
+                viewModel.updatePacienteForm { current -> current.copy(fechaNacimiento = it) }
+            },
+            label = { Text("Fecha de Nacimiento") },
+            placeholder = { Text("YYYY-MM-DD") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        state.errorMessage?.let { error ->
+            Spacer(Modifier.height(12.dp))
+            Text(error)
+        }
 
         Spacer(Modifier.height(24.dp))
 
@@ -145,50 +151,4 @@ fun RegisterStep1(onNext: () -> Unit) {
             Text("Siguiente")
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BirthDateField() {
-
-    var birth by remember { mutableStateOf("") }
-    var showDatePicker by remember { mutableStateOf(false) }
-
-    val datePickerState = rememberDatePickerState()
-
-    if (showDatePicker) {
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-
-                    datePickerState.selectedDateMillis?.let {
-                        birth = java.text.SimpleDateFormat(
-                            "dd/MM/yyyy"
-                        ).format(java.util.Date(it))
-                    }
-
-                    showDatePicker = false
-                }) {
-                    Text("Aceptar")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    OutlinedTextField(
-        value = birth,
-        onValueChange = {},
-        readOnly = true,
-        label = { Text("Fecha de Nacimiento") },
-        trailingIcon = {
-            Icon(Icons.Default.CalendarMonth, "")
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showDatePicker = true }
-    )
 }
