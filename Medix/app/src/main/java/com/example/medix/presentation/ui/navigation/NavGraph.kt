@@ -1,22 +1,23 @@
 package com.example.medix.presentation.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.medix.BuildConfig
-import com.example.medix.core.network.ApiService
+
 import com.example.medix.core.network.PacienteApiService
 import com.example.medix.core.network.SupabaseProvider
-import com.example.medix.core.network.WebSocketClient
-import com.example.medix.core.utils.Constants
+
 import com.example.medix.data.repositories.AuthRepositoryImpl
 import com.example.medix.data.repositories.PacienteRepositoryImpl
-import com.example.medix.data.repositories.VoiceRepositoryImpl
+
+import com.example.medix.di.RepositoryModule
 import com.example.medix.domain.repositories.PacienteRepository
-import com.example.medix.domain.repositories.VoiceRepository
+
 import com.example.medix.presentation.ui.screens.ConfirmationScreen
 import com.example.medix.presentation.ui.screens.LoginScreen
 import com.example.medix.presentation.ui.screens.NotificationsScreen
@@ -34,11 +35,6 @@ import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModelFactory
 import com.example.medix.services.AudioPlayer
 import com.example.medix.services.AudioRecorder
-import java.util.concurrent.TimeUnit
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
 fun NavGraph() {
@@ -48,7 +44,7 @@ fun NavGraph() {
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(
             authRepository = AuthRepositoryImpl(SupabaseProvider.createClientOrNull()),
-            pacienteRepository = providePacienteRepository(),
+            pacienteRepository = RepositoryModule.providePacienteRepository(),
         )
     )
 
@@ -111,9 +107,12 @@ fun NavGraph() {
         }
 
         composable("voice") {
-            val voiceViewModel: VoiceViewModel = viewModel(
+
+            val repository = remember { RepositoryModule.provideVoiceRepository()}
+
+            val viewModel: VoiceViewModel = viewModel(
                 factory = VoiceViewModelFactory(
-                    repository = provideVoiceRepository(),
+                    repository = repository,
                     recorder = AudioRecorder(context),
                     player = AudioPlayer(context),
                     context = context
@@ -121,9 +120,9 @@ fun NavGraph() {
             )
 
             VoiceScreen(
-                viewModel = voiceViewModel,
+                viewModel = viewModel,
                 onEndCall = {
-                    if (voiceViewModel.uiState.value.status == ConversationStatus.ERROR) {
+                    if (viewModel.uiState.value.status == ConversationStatus.ERROR) {
                         navController.navigate("schedule") {
                             popUpTo("schedule") { inclusive = true }
                         }
@@ -133,7 +132,6 @@ fun NavGraph() {
                 }
             )
         }
-
         composable("confirmation") {
             ConfirmationScreen(
                 onDone = {
@@ -183,49 +181,5 @@ fun NavGraph() {
     }
 }
 
-fun provideVoiceRepository(): VoiceRepository {
-    val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
 
-    val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(logging)
-        .connectTimeout(25, TimeUnit.SECONDS)
-        .readTimeout(25, TimeUnit.SECONDS)
-        .writeTimeout(25, TimeUnit.SECONDS)
-        .build()
 
-    val retrofit = Retrofit.Builder()
-        .baseUrl(Constants.BASE_URL)
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    return VoiceRepositoryImpl(
-        apiService = retrofit.create(ApiService::class.java),
-        webSocketClient = WebSocketClient(okHttpClient),
-    )
-}
-
-fun providePacienteRepository(): PacienteRepository {
-    val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-
-    val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(logging)
-        .connectTimeout(25, TimeUnit.SECONDS)
-        .readTimeout(25, TimeUnit.SECONDS)
-        .writeTimeout(25, TimeUnit.SECONDS)
-        .build()
-
-    val retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.MEDIX_API_BASE_URL)
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    return PacienteRepositoryImpl(
-        apiService = retrofit.create(PacienteApiService::class.java),
-    )
-}

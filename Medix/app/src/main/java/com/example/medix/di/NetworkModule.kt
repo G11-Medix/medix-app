@@ -1,6 +1,7 @@
 package com.example.medix.di
 
 
+import com.example.medix.BuildConfig
 import com.example.medix.core.auth.AuthInterceptor
 import com.example.medix.core.utils.Constants
 import okhttp3.OkHttpClient
@@ -27,6 +28,20 @@ object NetworkModule {
             .build()
     }
 
+    fun provideOkHttpAuth(): OkHttpClient {
+
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BASIC
+        }
+
+        return OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .connectTimeout(25, TimeUnit.SECONDS)
+            .readTimeout(25, TimeUnit.SECONDS)
+            .writeTimeout(25, TimeUnit.SECONDS)
+            .build()
+    }
+
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
@@ -34,4 +49,13 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
+
+    fun provideRetrofitAuth(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.MEDIX_API_BASE_URL)
+            .client(provideOkHttpAuth())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
 }
