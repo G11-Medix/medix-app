@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun TopBarProfile() {
@@ -20,16 +21,10 @@ fun TopBarProfile() {
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Icon(
-            imageVector = Icons.Default.ArrowBack,
-            contentDescription = null
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
         Text(
             text = "Mi Perfil",
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontSize = 26.sp
         )
     }
 }

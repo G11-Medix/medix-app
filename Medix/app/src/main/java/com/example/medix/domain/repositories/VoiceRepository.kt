@@ -21,7 +21,7 @@ interface VoiceRepository {
     fun sendWebSocketMessage(
         text: String,
         sessionId: String
-    )
+    ): Boolean
 
     fun closeWebSocket()
 }

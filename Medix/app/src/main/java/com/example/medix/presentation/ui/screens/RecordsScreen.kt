@@ -6,18 +6,27 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.medix.core.utils.DateUtils
+import com.example.medix.di.RepositoryModule
+import androidx.compose.ui.Alignment
 
 import com.example.medix.presentation.ui.components.records.AppointmentCard
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.HeaderSection
 import com.example.medix.presentation.ui.components.records.PastAppointmentCard
 import com.example.medix.presentation.ui.components.SectionTitle
+import com.example.medix.presentation.ui.state.UiState
+import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
+import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModelFactory
+
 
 @Composable
 fun RecordsScreen(
@@ -26,6 +35,14 @@ fun RecordsScreen(
     onNotificationsClick: () -> Unit
 ) {
 
+    val repository = remember { RepositoryModule.provideAppointmentRepository() }
+
+    val viewModel: AppointmentViewModel = viewModel(
+        factory = AppointmentViewModelFactory(repository)
+    )
+
+    val state = viewModel.uiState
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,9 +50,7 @@ fun RecordsScreen(
             .padding(16.dp)
     ) {
 
-        HeaderSection(
-            onNotificationsClick = onNotificationsClick
-        )
+        HeaderSection(onNotificationsClick = onNotificationsClick)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -47,39 +62,105 @@ fun RecordsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SectionTitle("Próximas citas")
+        when (state) {
 
-        AppointmentCard(
-            name = "Dr. Sarah Jenkins",
-            specialty = "Cardiologist • Video Call",
-            date = "Tomorrow, 10:30 AM"
-        )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            is UiState.Loading -> {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
 
-        AppointmentCard(
-            name = "Dr. Michael Chen",
-            specialty = "General Practitioner • Clinic",
-            date = "Friday, 2:15 PM"
-        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            is UiState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
 
-        SectionTitle("Citas Pasadas")
+                    Text(
+                        text = state.message,
+                        color = Color.Red
+                    )
 
-        PastAppointmentCard(
-            name = "Dr. John Doe",
-            specialty = "Dermatologist",
-            date = "Sept 10, 9:00 AM"
-        )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { viewModel.loadAppointments() }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
 
-        PastAppointmentCard(
-            name = "Dr. Emily Clark",
-            specialty = "Pediatrician",
-            date = "Aug 21, 11:00 AM"
-        )
+
+            is UiState.Success -> {
+
+                val upcoming = viewModel.upcomingAppointments
+                val past = viewModel.pastAppointments
+
+                if (upcoming.isEmpty() && past.isEmpty()) {
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No tienes citas registradas",
+                            color = Color.Gray
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(onClick = {
+                            onNavigate("schedule")
+                        }) {
+                            Text("Agendar cita")
+                        }
+                    }
+
+                } else {
+
+                    SectionTitle("Próximas citas")
+
+                    if (upcoming.isEmpty()) {
+                        Text(
+                            text = "No tienes citas próximas",
+                            color = Color.Gray
+                        )
+                    } else {
+                        upcoming.take(5).forEach {
+                            AppointmentCard(
+                                name = it.name,
+                                specialty = it.specialty,
+                                date = DateUtils.formatAppointmentDate(it.date)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SectionTitle("Citas Pasadas")
+
+                    if (past.isEmpty()) {
+                        Text(
+                            text = "No tienes citas pasadas",
+                            color = Color.Gray
+                        )
+                    } else {
+                        past.take(5).forEach {
+                            PastAppointmentCard(
+                                name = it.name,
+                                specialty = it.specialty,
+                                date = DateUtils.formatAppointmentDate(it.date)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 

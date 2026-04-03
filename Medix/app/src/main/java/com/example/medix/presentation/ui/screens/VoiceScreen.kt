@@ -23,6 +23,8 @@ import androidx.core.content.ContextCompat
 import com.example.medix.presentation.ui.components.voice.*
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 
+private const val DEFAULT_SCHEDULING_PROMPT = "Quiero empezar el agendamiento de una cita médica."
+
 @Composable
 fun VoiceScreen(
     viewModel: VoiceViewModel,
@@ -52,6 +54,7 @@ fun VoiceScreen(
         if (!hasMicPermission) {
             launcher.launch(Manifest.permission.RECORD_AUDIO)
         }
+        viewModel.startSchedulingSession(DEFAULT_SCHEDULING_PROMPT)
     }
 
     // Estado
@@ -112,27 +115,25 @@ fun VoiceScreen(
         }
 
         CallControls(
-            isMuted = isMuted,
-            isSpeakerOn = isSpeakerOn,
-            onMute = {
+            onSpeaker = {
+                viewModel.toggleSpeaker()
+            },
+            onMicHoldStart = {
                 if (hasMicPermission) {
-                    viewModel.toggleMute()
+                    viewModel.startRecording()
                 } else {
                     launcher.launch(Manifest.permission.RECORD_AUDIO)
                 }
             },
-            onSpeaker = {
-                viewModel.toggleSpeaker()
+            onMicHoldEnd = {
+                if (hasMicPermission) {
+                    viewModel.stopRecordingAndSend()
+                }
             }
         )
 
         EndCallButton(
-            onEndCall = {
-                if (hasMicPermission) {
-                    viewModel.stopRecordingAndSend()
-                }
-                onEndCall()
-            }
+            onEndCall = onEndCall
         )
     }
 }

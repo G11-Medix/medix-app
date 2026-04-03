@@ -15,9 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.medix.core.utils.DateUtils
+import com.example.medix.data.dto.AppointmentConfirmationDto
 
 @Composable
-fun AppointmentInfoCard() {
+fun AppointmentInfoCard(data: AppointmentConfirmationDto) {
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -26,14 +28,10 @@ fun AppointmentInfoCard() {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            Text(
-                "Dr. Smith",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            Text(data.doctorName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
             Text(
-                "Oct 12 at 10 AM",
+                DateUtils.formatAppointmentDate(data.date),
                 color = Color(0xFF1565C0),
                 fontWeight = FontWeight.Bold
             )
@@ -43,13 +41,13 @@ fun AppointmentInfoCard() {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = null)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Medix Health Center")
+                Text(data.clinicName)
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.DateRange, contentDescription = null)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Thursday, Oct 12, 2023")
+                Text(data.address)
             }
         }
     }
