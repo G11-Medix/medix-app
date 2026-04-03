@@ -19,12 +19,6 @@ fun TopBarConfirmation() {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Default.ArrowBack,
-            contentDescription = null
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
 
         Text(
             text = "Confirmación",

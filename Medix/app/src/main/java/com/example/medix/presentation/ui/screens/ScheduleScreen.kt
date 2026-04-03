@@ -2,7 +2,9 @@ package com.example.medix.presentation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -16,6 +18,7 @@ import com.example.medix.presentation.ui.components.HeaderSection
 import com.example.medix.presentation.ui.components.schedule.AppointmentSection
 import com.example.medix.presentation.ui.components.schedule.GreetingSection
 import com.example.medix.presentation.ui.components.schedule.VoiceCard
+import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModelFactory
 
@@ -33,6 +36,8 @@ fun ScheduleScreen(
     val viewModel: AppointmentViewModel = viewModel(
         factory = AppointmentViewModelFactory(repository)
     )
+
+    val state = viewModel.uiState
 
     Column(
         modifier = Modifier
@@ -53,24 +58,44 @@ fun ScheduleScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        if (viewModel.isLoading) {
+        when (state) {
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+
+            is UiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
 
-        } else {
 
-            AppointmentSection(
-                appointments = viewModel.upcomingAppointments.take(2),
-                onSeeAllClick = {
-                    onNavigate("records")
+            is UiState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = state.message, color = Color.Red)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(onClick = { viewModel.loadAppointments() }) {
+                        Text("Reintentar")
+                    }
                 }
-            )
+            }
 
+
+            is UiState.Success -> {
+
+                AppointmentSection(
+                    appointments = viewModel.upcomingAppointments.take(2),
+                    onSeeAllClick = {
+                        onNavigate("records")
+                    }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -81,4 +106,3 @@ fun ScheduleScreen(
         )
     }
 }
-

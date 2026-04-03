@@ -23,6 +23,7 @@ import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.HeaderSection
 import com.example.medix.presentation.ui.components.records.PastAppointmentCard
 import com.example.medix.presentation.ui.components.SectionTitle
+import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModelFactory
 
@@ -40,8 +41,7 @@ fun RecordsScreen(
         factory = AppointmentViewModelFactory(repository)
     )
 
-    val upcoming = viewModel.upcomingAppointments
-    val past = viewModel.pastAppointments
+    val state = viewModel.uiState
 
     Column(
         modifier = Modifier
@@ -62,73 +62,101 @@ fun RecordsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        when (state) {
 
-        if (viewModel.isLoading) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+
+            is UiState.Loading -> {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
             }
-        } else {
 
 
-            if (upcoming.isEmpty() && past.isEmpty()) {
-
+            is UiState.Error -> {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.Center
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
                     Text(
-                        text = "No tienes citas registradas",
-                        color = Color.Gray
+                        text = state.message,
+                        color = Color.Red
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Button(onClick = {
-                        onNavigate("schedule")
-                    }) {
-                        Text("Agendar cita")
+                    Button(onClick = { viewModel.loadAppointments() }) {
+                        Text("Reintentar")
                     }
                 }
+            }
 
-            } else {
 
+            is UiState.Success -> {
 
-                SectionTitle("Próximas citas")
+                val upcoming = viewModel.upcomingAppointments
+                val past = viewModel.pastAppointments
 
-                if (upcoming.isEmpty()) {
-                    Text(
-                        text = "No tienes citas próximas",
-                        color = Color.Gray
-                    )
-                } else {
-                    upcoming.take(5).forEach {
-                        AppointmentCard(
-                            name = it.name,
-                            specialty = it.specialty,
-                            date = DateUtils.formatAppointmentDate(it.date)
+                if (upcoming.isEmpty() && past.isEmpty()) {
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No tienes citas registradas",
+                            color = Color.Gray
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(onClick = {
+                            onNavigate("schedule")
+                        }) {
+                            Text("Agendar cita")
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-
-                SectionTitle("Citas Pasadas")
-
-                if (past.isEmpty()) {
-                    Text(
-                        text = "No tienes citas pasadas",
-                        color = Color.Gray
-                    )
                 } else {
-                    past.take(5).forEach {
-                        PastAppointmentCard(
-                            name = it.name,
-                            specialty = it.specialty,
-                            date = DateUtils.formatAppointmentDate(it.date)
+
+                    SectionTitle("Próximas citas")
+
+                    if (upcoming.isEmpty()) {
+                        Text(
+                            text = "No tienes citas próximas",
+                            color = Color.Gray
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                    } else {
+                        upcoming.take(5).forEach {
+                            AppointmentCard(
+                                name = it.name,
+                                specialty = it.specialty,
+                                date = DateUtils.formatAppointmentDate(it.date)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SectionTitle("Citas Pasadas")
+
+                    if (past.isEmpty()) {
+                        Text(
+                            text = "No tienes citas pasadas",
+                            color = Color.Gray
+                        )
+                    } else {
+                        past.take(5).forEach {
+                            PastAppointmentCard(
+                                name = it.name,
+                                specialty = it.specialty,
+                                date = DateUtils.formatAppointmentDate(it.date)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             }
