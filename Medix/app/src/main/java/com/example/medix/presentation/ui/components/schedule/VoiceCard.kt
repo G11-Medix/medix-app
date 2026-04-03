@@ -48,7 +48,7 @@ fun VoiceCard(
                     .size(60.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF1E88E5))
-                    .clickable { onMicClick() }, // 👈 CLICK AQUÍ
+                    .clickable { onMicClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -67,7 +67,7 @@ fun VoiceCard(
             )
 
             Text(
-                text = "AI",
+                text = "Asistente Medix",
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )

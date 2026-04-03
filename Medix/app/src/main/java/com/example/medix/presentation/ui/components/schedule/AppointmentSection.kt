@@ -1,5 +1,6 @@
 package com.example.medix.presentation.ui.components.schedule
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -7,10 +8,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import com.example.medix.core.utils.DateUtils
+import com.example.medix.domain.entities.Appointment
 import com.example.medix.presentation.ui.components.records.AppointmentCard
 
 @Composable
-fun AppointmentSection() {
+fun AppointmentSection(
+    appointments: List<Appointment>,
+    onSeeAllClick: () -> Unit
+) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -23,23 +29,29 @@ fun AppointmentSection() {
 
         Text(
             text = "Ver todas",
-            color = Color(0xFF1E88E5)
+            color = Color(0xFF1E88E5),
+            modifier = Modifier.clickable {
+                onSeeAllClick()
+            }
         )
     }
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    AppointmentCard(
-        name = "Dr. Sarah Jenkins",
-        specialty = "Cardiologist • Video Call",
-        date = "Mañana, 10:30 AM"
-    )
+    if (appointments.isEmpty()) {
+        Text(
+            text = "No tienes citas próximas",
+            color = Color.Gray
+        )
+    } else {
+        appointments.forEach { appointment ->
+            AppointmentCard(
+                name = appointment.name,
+                specialty = appointment.specialty,
+                date = DateUtils.formatAppointmentDate(appointment.date)
+            )
 
-    Spacer(modifier = Modifier.height(8.dp))
-
-    AppointmentCard(
-        name = "Dr. Michael Chen",
-        specialty = "General Practitioner • Clinic",
-        date = "Viernes, 2:15 PM"
-    )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
 }

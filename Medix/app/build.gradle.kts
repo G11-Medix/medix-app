@@ -95,6 +95,7 @@ dependencies {
         // Maps / GPS
         implementation("org.osmdroid:osmdroid-android:6.1.18")
 
+
         // Testing
         testImplementation(libs.junit)
         androidTestImplementation(libs.androidx.junit)

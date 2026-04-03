@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit
 class WebSocketClient(
     private val client: OkHttpClient = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .pingInterval(30, TimeUnit.SECONDS)
         .build(),
 ) {
 
@@ -63,6 +65,11 @@ class WebSocketClient(
 
                 override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                     Log.e("WebSocketClient", "✗ Connection failed", t)
+                    onStateChanged(false)
+                    scheduleReconnect(onMessage, onStateChanged)
+                }
+
+                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                     onStateChanged(false)
                     scheduleReconnect(onMessage, onStateChanged)
                 }
