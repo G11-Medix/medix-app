@@ -35,9 +35,6 @@ class VoiceViewModel(
     private val _isMuted = MutableStateFlow(false)
     val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
 
-    private val _isSpeakerOn = MutableStateFlow(false)
-    val isSpeakerOn: StateFlow<Boolean> = _isSpeakerOn.asStateFlow()
-
     private var currentAudioFile: File? = null
     private var isProcessingAudio = false
     private var isRecordingPressActive = false
@@ -270,24 +267,9 @@ class VoiceViewModel(
         Log.d("VoiceViewModel", "Message sent via WebSocket")
     }
 
-    // Service audio recorder
 
     fun toggleMute() {
-        val newValue = !_isMuted.value
-        _isMuted.value = newValue
-
-        if (newValue) {
-            recorder.mute()
-        } else {
-            recorder.unmute()
-        }
-        Log.d("VoiceViewModel", "Mute toggled: $newValue")
-    }
-
-    fun toggleSpeaker() {
-        val newValue = !_isSpeakerOn.value
-        _isSpeakerOn.value = newValue
-        Log.d("VoiceViewModel", "Speaker toggled: $newValue")
+        _isMuted.value = !_isMuted.value
     }
 
     // response
@@ -305,11 +287,13 @@ class VoiceViewModel(
             )
         }
 
-        if (!_isMuted.value && response.isNotBlank()) {
+        if (response.isNotBlank()) {
             Log.d("VoiceViewModel", "Speaking response")
-            player.speak(response)
-        } else {
-            Log.d("VoiceViewModel", "Not speaking: muted=${_isMuted.value}, blank=${response.isBlank()}")
+
+            player.speak(
+                response,
+                isMuted = _isMuted.value
+            )
         }
     }
 

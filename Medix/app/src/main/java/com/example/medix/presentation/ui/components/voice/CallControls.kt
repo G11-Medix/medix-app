@@ -19,10 +19,12 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun CallControls(
+    isMicPressed: Boolean,
+    isMuted: Boolean,
     onSpeaker: () -> Unit,
     onMicHoldStart: () -> Unit,
     onMicHoldEnd: () -> Unit,
-) {
+){
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -30,16 +32,15 @@ fun CallControls(
     ) {
 
         HoldControlButton(
-            icon = Icons.Default.Mic,
-            label = "Mantén para hablar",
+            icon = if (isMicPressed) Icons.Default.Mic else Icons.Default.MicOff,
+            label = if (isMicPressed) "Hablando" else "Mantén para hablar",
             onHoldStart = onMicHoldStart,
             onHoldEnd = onMicHoldEnd,
         )
 
-
         ControlButton(
-            icon = Icons.Default.VolumeOff,
-            label = "Altavoz",
+            icon = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+            label = if (isMuted) "Silenciado" else "Sonido",
             onClick = onSpeaker
         )
     }
@@ -53,7 +54,10 @@ private fun HoldControlButton(
     onHoldEnd: () -> Unit,
 ) {
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(100.dp)
+    ) {
 
         Box(
             modifier = Modifier
@@ -86,7 +90,10 @@ fun ControlButton(
     onClick: () -> Unit,
 ) {
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(100.dp)
+    ) {
 
         Box(
             modifier = Modifier
