@@ -2,9 +2,11 @@ package com.example.medix.di
 
 import com.example.medix.core.network.WebSocketClient
 import com.example.medix.data.repositories.AppointmentRepositoryImpl
+import com.example.medix.data.repositories.ConfirmationRepositoryImpl
 import com.example.medix.data.repositories.ProfileRepositoryImpl
 import com.example.medix.data.repositories.VoiceRepositoryImpl
 import com.example.medix.domain.repositories.AppointmentRepository
+import com.example.medix.domain.repositories.ConfirmationRepository
 import com.example.medix.domain.repositories.ProfileRepository
 import com.example.medix.domain.repositories.VoiceRepository
 
@@ -26,6 +28,12 @@ object RepositoryModule {
     fun provideProfileRepository(): ProfileRepository {
         return ProfileRepositoryImpl(
             ApiModule.provideProfileApi()
+        )
+    }
+
+    fun provideConfirmationRepository(): ConfirmationRepository {
+        return ConfirmationRepositoryImpl(
+            ApiModule.provideConfirmationApi()
         )
     }
 }

@@ -17,21 +17,63 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+
+data class Quad<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)
+
 @Composable
-fun SuccessHeader() {
+fun SuccessHeader(
+    title: String,
+    message: String,
+    status: String
+) {
+    val (bgColor, iconColor, textColor, icon) = when (status) {
+
+        "SUCCESS" -> Quad(
+            Color(0xFFC8E6C9),
+            Color(0xFF2E7D32),
+            Color(0xFF1565C0),
+            Icons.Default.Check
+        )
+
+        "PENDING" -> Quad(
+            Color(0xFFFFF9C4),
+            Color(0xFFF9A825),
+            Color(0xFFF9A825),
+            Icons.Default.Schedule
+        )
+
+        "CANCELLED" -> Quad(
+            Color(0xFFFFCDD2),
+            Color(0xFFC62828),
+            Color(0xFFC62828),
+            Icons.Default.Close
+        )
+
+        else -> Quad(
+            Color.LightGray,
+            Color.DarkGray,
+            Color.DarkGray,
+            Icons.Default.Info
+        )
+    }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         Box(
             modifier = Modifier
                 .size(100.dp)
-                .background(Color(0xFFC8E6C9), CircleShape),
+                .background(bgColor, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Check,
+                imageVector = icon,
                 contentDescription = null,
-                tint = Color(0xFF2E7D32),
+                tint = iconColor,
                 modifier = Modifier.size(50.dp)
             )
         }
@@ -39,11 +81,12 @@ fun SuccessHeader() {
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Exito!",
-            color = Color(0xFF1565C0),
+            text = title,
+            color = textColor,
             fontWeight = FontWeight.Bold
         )
 
-        Text("Tu cita ha sido confirmada")
+        Text(text = message)
     }
 }
+
