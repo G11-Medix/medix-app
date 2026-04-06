@@ -1,32 +1,60 @@
 package com.example.medix.presentation.ui.screens
 
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.medix.presentation.ui.components.register.PasswordField
 import com.example.medix.presentation.ui.theme.PrimaryBlue
+import com.example.medix.presentation.viewmodels.auth.AuthViewModel
+import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
+
 @Composable
 fun LoginScreen(
-    onCreateAccount: () -> Unit,
-    onLoginSuccess: () -> Unit
+    viewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit,
 ) {
+    val state by viewModel.uiState.collectAsState()
 
-    var documento by remember { mutableStateOf("") }
-    var remember by remember { mutableStateOf(false) }
-    var confirm by remember { mutableStateOf("") }
+    LaunchedEffect(state.navigationTarget) {
+        when (state.navigationTarget) {
+            AuthNavigationTarget.SCHEDULE -> {
+                viewModel.onNavigationHandled()
+                onLoginSuccess()
+            }
+            AuthNavigationTarget.REGISTER -> {
+                viewModel.onNavigationHandled()
+                onNavigateToRegister()
+            }
+            AuthNavigationTarget.NONE -> Unit
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -35,28 +63,14 @@ fun LoginScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Text(
+            text = "Medix",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
             modifier = Modifier.fillMaxWidth()
-        ) {
-
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.ArrowBack, "")
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                "Medix",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-        }
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -67,23 +81,21 @@ fun LoginScreen(
                 .fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Icon(
-                    Icons.Default.MedicalServices,
-                    contentDescription = "",
+                    imageVector = Icons.Default.Phone,
+                    contentDescription = null,
                     tint = PrimaryBlue,
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier.height(60.dp)
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    "Bienvenido",
+                    text = "Autenticacion por SMS",
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -91,7 +103,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    "Entra a tu propia cuenta para acceder a tu registro de citas",
+                    text = "Ingresa el telefono autorizado del paciente. Solo los usuarios habilitados pueden recibir codigo OTP.",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -99,65 +111,87 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
-                    value = documento,
-                    onValueChange = { documento = it },
-                    label = { Text("Número de Documento") },
-                    placeholder = { Text("ej. 0000000000") },
+                    value = state.phone,
+                    onValueChange = viewModel::updatePhone,
+                    label = { Text("Teléfono") },
+                    placeholder = { Text("+573001234567") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.Default.Phone, contentDescription = null)
+                    },
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                if (state.otpSent) {
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                PasswordField(confirm) { confirm = it }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-
-                    Checkbox(
-                        checked = remember,
-                        onCheckedChange = { remember = it }
+                    OutlinedTextField(
+                        value = state.otpCode,
+                        onValueChange = viewModel::updateOtpCode,
+                        label = { Text("Código OTP") },
+                        placeholder = { Text("123456") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, contentDescription = null)
+                        },
                     )
 
-                    Text("Recordarme")
+                    TextButton(
+                        onClick = viewModel::resendLoginOtp,
+                        enabled = !state.isLoading,
+                        modifier = Modifier.align(Alignment.End),
+                    ) {
+                        Text("Reenviar código")
+                    }
+                }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                state.infoMessage?.let { info ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = info,
+                        color = PrimaryBlue,
+                        fontSize = 13.sp,
+                    )
+                }
 
-                    ClickableText(
-                        text = AnnotatedString("¿Olvidaste tu contraseña?"),
-                        onClick = {}
+                state.errorMessage?.let { error ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 13.sp,
                     )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
-                    onClick = onLoginSuccess, // <- navega a "schedule"
+                    onClick = {
+                        if (state.otpSent) {
+                            viewModel.verifyOtpAndResolveFlow()
+                        } else {
+                            viewModel.requestOtp()
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = !state.isLoading,
                 ) {
-                    Text("Ingresar")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("¿Eres nuevo?")
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedButton(
-                    onClick = onCreateAccount,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Crear Cuenta")
+                    Text(
+                        text = if (state.isLoading) {
+                            "Procesando..."
+                        } else if (state.otpSent) {
+                            "Verificar código"
+                        } else {
+                            "Enviar código"
+                        }
+                    )
                 }
             }
         }

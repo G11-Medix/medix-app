@@ -4,39 +4,56 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.medix.core.network.SupabaseProvider
+import com.example.medix.data.repositories.AuthRepositoryImpl
 import com.example.medix.di.RepositoryModule
-
-import com.example.medix.presentation.ui.screens.*
+import com.example.medix.presentation.ui.screens.ConfirmationScreen
+import com.example.medix.presentation.ui.screens.LoginScreen
+import com.example.medix.presentation.ui.screens.NotificationsScreen
+import com.example.medix.presentation.ui.screens.ProfileScreen
+import com.example.medix.presentation.ui.screens.RecordsScreen
+import com.example.medix.presentation.ui.screens.RegisterStep1
+import com.example.medix.presentation.ui.screens.RegisterStep2
+import com.example.medix.presentation.ui.screens.RegisterStep3
+import com.example.medix.presentation.ui.screens.ScheduleScreen
+import com.example.medix.presentation.ui.screens.VoiceScreen
+import com.example.medix.presentation.viewmodels.auth.AuthViewModel
+import com.example.medix.presentation.viewmodels.auth.AuthViewModelFactory
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModelFactory
-
-
-
 import com.example.medix.services.AudioPlayer
 import com.example.medix.services.AudioRecorder
 
-
-
-import com.example.medix.presentation.viewmodels.status.ConversationStatus
-
 @Composable
 fun NavGraph() {
-
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(
+            authRepository = AuthRepositoryImpl(SupabaseProvider.createClientOrNull()),
+            pacienteRepository = RepositoryModule.providePacienteRepository(),
+        )
+    )
 
     NavHost(
         navController = navController,
         startDestination = "login"
     ) {
-
         composable("login") {
             LoginScreen(
-                onCreateAccount = { navController.navigate("register1") },
+                viewModel = authViewModel,
                 onLoginSuccess = {
                     navController.navigate("schedule") {
                         popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate("register1") {
                         launchSingleTop = true
                     }
                 }
@@ -45,25 +62,29 @@ fun NavGraph() {
 
         composable("register1") {
             RegisterStep1(
-                onNext = { navController.navigate("register2") }
+                viewModel = authViewModel,
+                onNext = { navController.navigate("register2") },
             )
         }
 
         composable("register2") {
             RegisterStep2(
+                viewModel = authViewModel,
                 onNext = { navController.navigate("register3") },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
             )
         }
 
         composable("register3") {
             RegisterStep3(
-                onCreate = {
+                viewModel = authViewModel,
+                onRegistrationSuccess = {
                     navController.navigate("schedule") {
-                        popUpTo("schedule") { inclusive = true }
+                        popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
             )
         }
 
@@ -109,7 +130,6 @@ fun NavGraph() {
                 }
             )
         }
-
         composable("confirmation") {
             ConfirmationScreen(
                 onDone = {
@@ -158,8 +178,3 @@ fun NavGraph() {
         }
     }
 }
-
-
-
-
-

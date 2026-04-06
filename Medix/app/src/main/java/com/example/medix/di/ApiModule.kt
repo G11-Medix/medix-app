@@ -4,6 +4,7 @@ package com.example.medix.di
 import com.example.medix.core.network.ApiService
 import com.example.medix.core.network.AppointmentApi
 import com.example.medix.core.network.ConfirmationApi
+import com.example.medix.core.network.PacienteApiService
 import com.example.medix.core.network.ProfileApi
 import retrofit2.Retrofit
 
@@ -32,5 +33,11 @@ object ApiModule {
         return NetworkModule
             .provideRetrofit()
             .create(ConfirmationApi::class.java)
+    }
+
+    fun providePacienteApiService(): PacienteApiService {
+        return NetworkModule
+            .provideRetrofitAuth()
+            .create(PacienteApiService::class.java)
     }
 }
