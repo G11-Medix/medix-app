@@ -122,12 +122,14 @@ fun NavGraph() {
             VoiceScreen(
                 viewModel = viewModel,
                 onEndCall = {
-                    if (viewModel.uiState.value.status == ConversationStatus.ERROR) {
+                    if (viewModel.uiState.value.completed == true) {
+                        navController.navigate("confirmation") {
+                            popUpTo("confirmation") { inclusive = true }
+                        }
+                    } else {
                         navController.navigate("schedule") {
                             popUpTo("schedule") { inclusive = true }
                         }
-                    } else {
-                        navController.navigate("confirmation")
                     }
                 }
             )

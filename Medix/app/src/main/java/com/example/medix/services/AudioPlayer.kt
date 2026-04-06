@@ -33,13 +33,16 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
         }
     }
 
-    fun speak(text: String) {
+    fun speak(text: String, isMuted: Boolean) {
+        if (isMuted) {
+            Log.d("AudioPlayer", "Muted → not speaking")
+            return
+        }
+
         if (text.isBlank()) {
             Log.w("AudioPlayer", "Attempting to speak blank text")
             return
         }
-
-        Log.d("AudioPlayer", "speak() called with: $text, isReady: $isReady")
 
         if (!isReady) {
             Log.w("AudioPlayer", "TextToSpeech not ready, queuing text")
@@ -50,16 +53,20 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
 
         val chunks = splitForTts(text)
         var first = true
+
         chunks.forEachIndexed { index, chunk ->
             val queueMode = if (first) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
             val utteranceId = "MEDIX_TTS_${System.currentTimeMillis()}_$index"
+
             val result = textToSpeech.speak(chunk, queueMode, null, utteranceId)
+
             if (result == TextToSpeech.ERROR) {
                 Log.e("AudioPlayer", "speak() returned ERROR, queuing full text")
                 pendingText = text
                 pendingId = java.util.UUID.randomUUID().toString()
                 return
             }
+
             first = false
         }
 
