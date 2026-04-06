@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -66,13 +69,42 @@ fun RegisterStep3(
         Spacer(Modifier.height(8.dp))
         Text("Correo: ${form.correo.ifBlank { "Sin correo" }}")
         Spacer(Modifier.height(8.dp))
-        Text("Estado: ${form.estado}")
+        Text("Estado: ACTIVO")
         Spacer(Modifier.height(8.dp))
-        Text("Institución: ${form.idInstitucion}")
+        Text("EPS: ${form.epsNombre.ifBlank { "Sin seleccionar" }}")
+
+        if (state.otpSent) {
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = state.otpCode,
+                onValueChange = viewModel::updateOtpCode,
+                label = { Text("Código OTP") },
+                placeholder = { Text("123456") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                leadingIcon = {
+                    Icon(Icons.Default.Lock, contentDescription = null)
+                },
+            )
+
+            TextButton(
+                onClick = viewModel::resendRegisterOtp,
+                enabled = !state.isLoading,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Reenviar código")
+            }
+        }
 
         state.errorMessage?.let { error ->
             Spacer(Modifier.height(12.dp))
             Text(error)
+        }
+
+        state.infoMessage?.let { info ->
+            Spacer(Modifier.height(12.dp))
+            Text(info)
         }
 
         Spacer(Modifier.height(24.dp))
@@ -82,7 +114,14 @@ fun RegisterStep3(
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isLoading,
         ) {
-            Text(if (state.isLoading) "Creando..." else "Crear Cuenta")
+            Text(
+                when {
+                    state.isLoading && state.otpSent -> "Verificando..."
+                    state.isLoading -> "Enviando código..."
+                    state.otpSent -> "Verificar y Crear Cuenta"
+                    else -> "Enviar código"
+                }
+            )
         }
 
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {

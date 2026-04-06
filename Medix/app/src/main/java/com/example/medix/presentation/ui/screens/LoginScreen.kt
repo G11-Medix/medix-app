@@ -16,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,6 +38,7 @@ import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
 fun LoginScreen(
     viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -46,8 +48,11 @@ fun LoginScreen(
                 viewModel.onNavigationHandled()
                 onLoginSuccess()
             }
+            AuthNavigationTarget.REGISTER -> {
+                viewModel.onNavigationHandled()
+                onNavigateToRegister()
+            }
             AuthNavigationTarget.NONE -> Unit
-            AuthNavigationTarget.REGISTER -> Unit
         }
     }
 
@@ -133,6 +138,14 @@ fun LoginScreen(
                             Icon(Icons.Default.Lock, contentDescription = null)
                         },
                     )
+
+                    TextButton(
+                        onClick = viewModel::resendLoginOtp,
+                        enabled = !state.isLoading,
+                        modifier = Modifier.align(Alignment.End),
+                    ) {
+                        Text("Reenviar código")
+                    }
                 }
 
                 state.infoMessage?.let { info ->

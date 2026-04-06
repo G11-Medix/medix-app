@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medix.data.dto.CreatePacienteRequest
+import com.example.medix.data.dto.EpsDto
 import com.example.medix.domain.repositories.AuthRepository
 import com.example.medix.domain.repositories.PacienteRepository
 import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
@@ -52,6 +53,30 @@ class AuthViewModel(
         }
     }
 
+    fun loadEpsIfNeeded() {
+        if (_uiState.value.epsOptions.isNotEmpty() || _uiState.value.isLoadingEps) {
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingEps = true, errorMessage = null) }
+
+            runCatching {
+                pacienteRepository.getEps().sortedBy(EpsDto::nombre)
+            }.onSuccess { epsOptions ->
+                _uiState.update {
+                    it.copy(
+                        isLoadingEps = false,
+                        epsOptions = epsOptions,
+                    )
+                }
+            }.onFailure {
+                showError("No se pudo cargar la lista de EPS: ${it.localizedMessage}")
+                _uiState.update { state -> state.copy(isLoadingEps = false) }
+            }
+        }
+    }
+
     fun requestOtp() {
         val normalizedPhone = normalizePhone(_uiState.value.phone)
         if (normalizedPhone.isBlank()) {
@@ -59,16 +84,63 @@ class AuthViewModel(
             return
         }
 
+        sendLoginOtp(normalizedPhone, isResend = false)
+    }
+
+    fun resendLoginOtp() {
+        val normalizedPhone = normalizePhone(_uiState.value.phone)
+        if (normalizedPhone.isBlank()) {
+            showError("Ingresa un teléfono válido antes de reenviar el código.")
+            return
+        }
+
+        sendLoginOtp(normalizedPhone, isResend = true)
+    }
+
+    fun resendRegisterOtp() {
+        val normalizedPhone = normalizePhone(_uiState.value.pacienteForm.telefono)
+        if (normalizedPhone.isBlank()) {
+            showError("Ingresa un teléfono válido antes de reenviar el código.")
+            return
+        }
+
+        viewModelScope.launch {
+            setLoading(true)
+            runCatching {
+                sendRegisterOtp(normalizedPhone)
+                RegistrationResult.OtpSent(
+                    phone = normalizedPhone,
+                    isResend = true,
+                )
+            }.onSuccess {
+                updateRegisterOtpState(it)
+            }.onFailure {
+                showError("No se pudo reenviar el código: ${it.localizedMessage}")
+            }
+        }
+    }
+
+    private fun sendLoginOtp(
+        normalizedPhone: String,
+        isResend: Boolean,
+    ) {
         viewModelScope.launch {
             setLoading(true)
             runCatching {
                 val eligibility = pacienteRepository.getAuthEligibilityByTelefono(normalizedPhone)
-                    ?: error("No se pudo validar el acceso para este numero.")
+                if (eligibility == null) {
+                    navigateToRegister(normalizedPhone)
+                    return@launch
+                }
 
                 if (!eligibility.authorized) {
+                    if (eligibility.reason == "PATIENT_NOT_FOUND") {
+                        navigateToRegister(normalizedPhone)
+                        return@launch
+                    }
+
                     error(
                         when (eligibility.reason) {
-                            "PATIENT_NOT_FOUND" -> "Este numero no esta autorizado para ingresar."
                             "PATIENT_INACTIVE" -> "Este paciente no tiene acceso activo."
                             "USER_NOT_LINKED" -> "Este paciente aun no tiene acceso habilitado. Contacta al administrador."
                             "USER_INACTIVE" -> "Este paciente no tiene acceso activo."
@@ -94,7 +166,11 @@ class AuthViewModel(
                     it.copy(
                         phone = normalizedPhone,
                         otpSent = true,
-                        infoMessage = "Te enviamos un codigo por SMS.",
+                        infoMessage = if (isResend) {
+                            "Te reenviamos el código por SMS."
+                        } else {
+                            "Te enviamos un codigo por SMS."
+                        },
                         isLoading = false,
                     )
                 }
@@ -150,7 +226,6 @@ class AuthViewModel(
     fun registerPaciente() {
         val form = _uiState.value.pacienteForm
         val normalizedPhone = normalizePhone(form.telefono)
-        val currentUserId = authRepository.currentUserId()
 
         val validationError = validatePacienteForm(form, normalizedPhone)
         if (validationError != null) {
@@ -161,28 +236,48 @@ class AuthViewModel(
         viewModelScope.launch {
             setLoading(true)
             runCatching {
-                pacienteRepository.createPaciente(
-                    CreatePacienteRequest(
-                        tipoDocumento = form.tipoDocumento,
-                        numeroDocumento = form.numeroDocumento.trim(),
-                        nombres = form.nombres.trim(),
-                        apellidos = form.apellidos.trim(),
-                        fechaNacimiento = form.fechaNacimiento.trim(),
-                        telefono = normalizedPhone,
-                        correo = form.correo.trim().ifBlank { null },
-                        estado = form.estado,
-                        idUsuario = currentUserId,
-                        idInstitucion = form.idInstitucion.trim().toLong(),
+                if (!_uiState.value.otpSent) {
+                    sendRegisterOtp(normalizedPhone)
+                    RegistrationResult.OtpSent(
+                        phone = normalizedPhone,
+                        isResend = false,
                     )
-                )
+                } else {
+                    val otpCode = _uiState.value.otpCode.trim()
+                    if (otpCode.length < 4) {
+                        error("Ingresa el código OTP completo.")
+                    }
+
+                    val userId = authRepository.verifyOtp(normalizedPhone, otpCode)
+                    pacienteRepository.createPaciente(
+                        CreatePacienteRequest(
+                            tipoDocumento = form.tipoDocumento,
+                            numeroDocumento = form.numeroDocumento.trim(),
+                            nombres = form.nombres.trim(),
+                            apellidos = form.apellidos.trim(),
+                            fechaNacimiento = form.fechaNacimiento.trim(),
+                            telefono = normalizedPhone,
+                            correo = form.correo.trim().ifBlank { null },
+                            estado = "ACTIVO",
+                            idUsuario = userId,
+                            idEps = form.idEps.trim().toLong(),
+                        )
+                    )
+                    RegistrationResult.PacienteCreated
+                }
             }.onSuccess {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = null,
-                        infoMessage = "Paciente creado correctamente.",
-                        navigationTarget = AuthNavigationTarget.SCHEDULE,
-                    )
+                when (it) {
+                    is RegistrationResult.OtpSent -> updateRegisterOtpState(it)
+                    RegistrationResult.PacienteCreated -> {
+                        _uiState.update { state ->
+                            state.copy(
+                                isLoading = false,
+                                errorMessage = null,
+                                infoMessage = "Paciente creado correctamente.",
+                                navigationTarget = AuthNavigationTarget.SCHEDULE,
+                            )
+                        }
+                    }
                 }
             }.onFailure {
                 showError("No se pudo crear el paciente: ${it.localizedMessage}")
@@ -209,9 +304,8 @@ class AuthViewModel(
             form.apellidos.isBlank() -> "Ingresa los apellidos."
             form.fechaNacimiento.isBlank() -> "Ingresa la fecha de nacimiento en formato YYYY-MM-DD."
             normalizedPhone.isBlank() -> "Ingresa el teléfono del paciente."
-            form.estado.isBlank() -> "Selecciona el estado del paciente."
-            form.idInstitucion.isBlank() -> "Ingresa el id de institución."
-            form.idInstitucion.toLongOrNull() == null -> "El id de institución debe ser numérico."
+            form.idEps.isBlank() -> "Selecciona una EPS."
+            form.idEps.toLongOrNull() == null -> "La EPS seleccionada no es válida."
             else -> null
         }
     }
@@ -234,7 +328,61 @@ class AuthViewModel(
         }
     }
 
+    private fun navigateToRegister(phone: String) {
+        _uiState.update {
+            it.copy(
+                phone = phone,
+                pacienteForm = it.pacienteForm.copy(telefono = phone),
+                isLoading = false,
+                otpSent = false,
+                otpCode = "",
+                errorMessage = null,
+                infoMessage = "No encontramos este teléfono. Completa el registro para continuar.",
+                navigationTarget = AuthNavigationTarget.REGISTER,
+            )
+        }
+    }
+
     private fun normalizePhone(phone: String): String {
-        return phone.filterNot(Char::isWhitespace)
+        val compactPhone = phone.filterNot(Char::isWhitespace)
+        if (compactPhone.isBlank()) {
+            return ""
+        }
+
+        val digitsOnly = compactPhone.filter(Char::isDigit)
+        return if (digitsOnly.isBlank()) {
+            ""
+        } else {
+            "+$digitsOnly"
+        }
+    }
+
+    private fun updateRegisterOtpState(result: RegistrationResult.OtpSent) {
+        _uiState.update { state ->
+            state.copy(
+                phone = result.phone,
+                pacienteForm = state.pacienteForm.copy(telefono = result.phone),
+                otpSent = true,
+                isLoading = false,
+                errorMessage = null,
+                infoMessage = if (result.isResend) {
+                    "Te reenviamos el código por WhatsApp. Verifícalo para terminar el registro."
+                } else {
+                    "Te enviamos un código por WhatsApp. Verifícalo para terminar el registro."
+                },
+            )
+        }
+    }
+
+    private suspend fun sendRegisterOtp(normalizedPhone: String) {
+        authRepository.requestOtp(normalizedPhone, createUser = true)
+    }
+
+    private sealed interface RegistrationResult {
+        data class OtpSent(
+            val phone: String,
+            val isResend: Boolean,
+        ) : RegistrationResult
+        data object PacienteCreated : RegistrationResult
     }
 }

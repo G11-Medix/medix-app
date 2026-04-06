@@ -8,6 +8,6 @@ data class PacienteFormState(
     val fechaNacimiento: String = "",
     val telefono: String = "",
     val correo: String = "",
-    val estado: String = "PENDIENTE",
-    val idInstitucion: String = "",
+    val idEps: String = "",
+    val epsNombre: String = "",
 )

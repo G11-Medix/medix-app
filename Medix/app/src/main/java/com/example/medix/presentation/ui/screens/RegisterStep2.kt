@@ -1,5 +1,6 @@
 package com.example.medix.presentation.ui.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -19,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +41,10 @@ fun RegisterStep2(
     val form = state.pacienteForm
     var expanded by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        viewModel.loadEpsIfNeeded()
+    }
+
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         IconButton(onClick = onBack) {
             Icon(Icons.Default.ArrowBack, contentDescription = null)
@@ -53,7 +60,14 @@ fun RegisterStep2(
 
         OutlinedTextField(
             value = form.telefono,
-            onValueChange = viewModel::updatePhone,
+            onValueChange = { input ->
+                val normalizedInput = when {
+                    input.isBlank() -> ""
+                    input.startsWith("+") -> input
+                    else -> "+$input"
+                }
+                viewModel.updatePhone(normalizedInput)
+            },
             label = { Text("Teléfono") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
@@ -74,52 +88,57 @@ fun RegisterStep2(
         Spacer(Modifier.height(20.dp))
 
         OutlinedTextField(
-            value = form.estado,
+            value = form.epsNombre,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Estado") },
+            label = { Text("EPS") },
+            placeholder = { Text("Selecciona una EPS") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 
         Spacer(Modifier.height(8.dp))
 
-        Button(
-            onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Seleccionar estado")
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            listOf("ACTIVO", "INACTIVO", "PENDIENTE", "ELIMINADO").forEach { estado ->
-                DropdownMenuItem(
-                    text = { Text(estado) },
-                    onClick = {
-                        viewModel.updatePacienteForm { current ->
-                            current.copy(estado = estado)
-                        }
-                        expanded = false
+        Box {
+            Button(
+                onClick = { expanded = true },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = state.epsOptions.isNotEmpty() && !state.isLoadingEps
+            ) {
+                Text(
+                    when {
+                        state.isLoadingEps -> "Cargando EPS..."
+                        state.epsOptions.isEmpty() -> "Sin EPS disponibles"
+                        else -> "Seleccionar EPS"
                     }
                 )
             }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                state.epsOptions.forEach { eps ->
+                    DropdownMenuItem(
+                        text = { Text(eps.nombre) },
+                        onClick = {
+                            viewModel.updatePacienteForm { current ->
+                                current.copy(
+                                    idEps = eps.idEps.toString(),
+                                    epsNombre = eps.nombre,
+                                )
+                            }
+                            expanded = false
+                        }
+                    )
+                }
+            }
         }
 
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = form.idInstitucion,
-            onValueChange = {
-                viewModel.updatePacienteForm { current -> current.copy(idInstitucion = it) }
-            },
-            label = { Text("ID Institución") },
-            placeholder = { Text("ej. 1") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
+        if (state.isLoadingEps) {
+            Spacer(Modifier.height(12.dp))
+            CircularProgressIndicator()
+        }
 
         state.errorMessage?.let { error ->
             Spacer(Modifier.height(12.dp))

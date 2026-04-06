@@ -12,15 +12,16 @@ class AuthRepositoryImpl(
     private val supabaseClient: SupabaseClient?,
 ) : AuthRepository {
 
-    override suspend fun requestOtp(phone: String) {
+    override suspend fun requestOtp(
+        phone: String,
+        createUser: Boolean,
+    ) {
         val client = requireConfiguredClient()
 
-        Log.e( "ALERT", phone)
-
         client.auth.signInWith(OTP) {
-            this.phone = "+$phone"
+            this.phone = phone
             channel = Phone.Channel.WHATSAPP
-            createUser = false
+            this.createUser = createUser
         }
     }
 

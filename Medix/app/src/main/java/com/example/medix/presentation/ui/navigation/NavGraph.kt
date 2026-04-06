@@ -7,17 +7,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.medix.BuildConfig
-
-import com.example.medix.core.network.PacienteApiService
 import com.example.medix.core.network.SupabaseProvider
-
 import com.example.medix.data.repositories.AuthRepositoryImpl
-import com.example.medix.data.repositories.PacienteRepositoryImpl
-
 import com.example.medix.di.RepositoryModule
-import com.example.medix.domain.repositories.PacienteRepository
-
 import com.example.medix.presentation.ui.screens.ConfirmationScreen
 import com.example.medix.presentation.ui.screens.LoginScreen
 import com.example.medix.presentation.ui.screens.NotificationsScreen
@@ -30,7 +22,6 @@ import com.example.medix.presentation.ui.screens.ScheduleScreen
 import com.example.medix.presentation.ui.screens.VoiceScreen
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
 import com.example.medix.presentation.viewmodels.auth.AuthViewModelFactory
-import com.example.medix.presentation.viewmodels.status.ConversationStatus
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModelFactory
 import com.example.medix.services.AudioPlayer
@@ -58,6 +49,11 @@ fun NavGraph() {
                 onLoginSuccess = {
                     navController.navigate("schedule") {
                         popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate("register1") {
                         launchSingleTop = true
                     }
                 }
@@ -182,6 +178,3 @@ fun NavGraph() {
         }
     }
 }
-
-
-
