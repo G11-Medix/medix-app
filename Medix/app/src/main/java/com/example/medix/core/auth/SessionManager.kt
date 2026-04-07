@@ -11,6 +11,8 @@ object SessionManager {
     private const val KEY_TOKEN = "token"
 
     private var prefs: SharedPreferences? = null
+
+    private var pacienteId: Long? = null
     private val _sessionState = MutableStateFlow(AuthSessionState())
     val sessionState: StateFlow<AuthSessionState> = _sessionState.asStateFlow()
 
@@ -49,4 +51,10 @@ object SessionManager {
     fun requireToken(): String {
         return getToken() ?: error("No hay un token de sesion disponible.")
     }
+
+    fun savePacienteId(id: Long) {
+        pacienteId = id
+    }
+
+    fun getPacienteId(): Long? = pacienteId
 }

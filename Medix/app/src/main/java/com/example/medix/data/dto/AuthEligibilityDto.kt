@@ -10,4 +10,5 @@ data class AuthEligiblePacienteDto(
     val estado: String,
     val telefono: String?,
     val id_usuario: String?,
+    val id_paciente: Long?,
 )

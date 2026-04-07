@@ -1,6 +1,7 @@
 package com.example.medix.core.network
 
 import android.util.Log
+import com.example.medix.core.auth.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,6 +46,20 @@ class WebSocketClient(
                     reconnectJob = null
                     reconnectAttempts = 0
                     onStateChanged(true)
+                    val idPaciente = SessionManager.getPacienteId()
+
+                    if (idPaciente != null) {
+                        val initMessage = """
+                            {
+                                "type": "init",
+                                "id_paciente": $idPaciente
+                            }
+                        """.trimIndent()
+
+                        webSocket.send(initMessage)
+                    } else {
+                        Log.e("WebSocketClient", "⚠ id_paciente is null")
+                    }
                 }
 
                 override fun onMessage(webSocket: WebSocket, text: String) {

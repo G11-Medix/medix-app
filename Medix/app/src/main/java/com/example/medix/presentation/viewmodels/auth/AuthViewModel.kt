@@ -204,6 +204,15 @@ class AuthViewModel(
             runCatching {
                 authRepository.verifyOtp(normalizedPhone, otpCode)
                 persistAuthenticatedSession()
+                val paciente = pacienteRepository
+                    .getAuthEligibilityByTelefono(normalizedPhone)
+                    ?.paciente
+                    ?: error("No se pudo obtener el paciente")
+
+                val pacienteId = paciente.id_paciente
+                    ?: error("El paciente no tiene id_paciente")
+
+                SessionManager.savePacienteId(pacienteId)
             }.onSuccess {
                 _uiState.update {
                     it.copy(
