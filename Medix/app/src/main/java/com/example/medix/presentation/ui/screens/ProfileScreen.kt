@@ -1,15 +1,11 @@
 package com.example.medix.presentation.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-
 import androidx.compose.material3.*
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,13 +13,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.medix.presentation.ui.state.UiState
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.presentation.ui.components.BottomNavigationBar
+import com.example.medix.presentation.ui.components.SectionTitle
 import com.example.medix.presentation.ui.components.profile.InfoCard
 import com.example.medix.presentation.ui.components.profile.InfoCardWithButton
 import com.example.medix.presentation.ui.components.profile.InfoCardWithStatus
-import com.example.medix.presentation.ui.components.SectionTitle
 import com.example.medix.presentation.ui.components.profile.TopBarProfile
+import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModelFactory
 
@@ -38,6 +35,7 @@ fun ProfileScreen(
     )
 
     val state = viewModel.uiState
+    val onLogout = { SessionManager.clearSession() }
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
@@ -47,11 +45,11 @@ fun ProfileScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F7FA))
+            .statusBarsPadding()
             .padding(16.dp)
     ) {
 
-
-        TopBarProfile()
+        TopBarProfile(onLogout = onLogout)
 
 
         Box(

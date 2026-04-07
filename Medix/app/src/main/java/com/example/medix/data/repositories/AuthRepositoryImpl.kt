@@ -1,6 +1,5 @@
 package com.example.medix.data.repositories
 
-import android.util.Log
 import com.example.medix.domain.repositories.AuthRepository
 import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.auth
@@ -43,6 +42,10 @@ class AuthRepositoryImpl(
 
     override fun currentUserId(): String? {
         return supabaseClient?.auth?.currentUserOrNull()?.id
+    }
+
+    override fun currentAccessToken(): String? {
+        return supabaseClient?.auth?.currentAccessTokenOrNull()
     }
 
     private fun requireConfiguredClient(): SupabaseClient {

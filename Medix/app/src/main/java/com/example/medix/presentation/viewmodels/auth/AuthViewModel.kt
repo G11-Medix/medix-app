@@ -3,6 +3,7 @@ package com.example.medix.presentation.viewmodels.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.data.dto.CreatePacienteRequest
 import com.example.medix.data.dto.EpsDto
 import com.example.medix.domain.repositories.AuthRepository
@@ -202,6 +203,7 @@ class AuthViewModel(
             setLoading(true)
             runCatching {
                 authRepository.verifyOtp(normalizedPhone, otpCode)
+                persistAuthenticatedSession()
             }.onSuccess {
                 _uiState.update {
                     it.copy(
@@ -249,6 +251,7 @@ class AuthViewModel(
                     }
 
                     val userId = authRepository.verifyOtp(normalizedPhone, otpCode)
+                    persistAuthenticatedSession()
                     pacienteRepository.createPaciente(
                         CreatePacienteRequest(
                             tipoDocumento = form.tipoDocumento,
@@ -376,6 +379,13 @@ class AuthViewModel(
 
     private suspend fun sendRegisterOtp(normalizedPhone: String) {
         authRepository.requestOtp(normalizedPhone, createUser = true)
+    }
+
+    private fun persistAuthenticatedSession() {
+        val accessToken = authRepository.currentAccessToken()
+            ?: error("Supabase autenticó el OTP pero no devolvió un access token.")
+
+        SessionManager.saveSession(accessToken)
     }
 
     private sealed interface RegistrationResult {

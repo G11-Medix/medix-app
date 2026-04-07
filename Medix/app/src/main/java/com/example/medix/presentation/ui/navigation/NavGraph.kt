@@ -1,12 +1,17 @@
 package com.example.medix.presentation.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.core.network.SupabaseProvider
 import com.example.medix.data.repositories.AuthRepositoryImpl
 import com.example.medix.di.RepositoryModule
@@ -31,6 +36,9 @@ import com.example.medix.services.AudioRecorder
 fun NavGraph() {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val sessionState by SessionManager.sessionState.collectAsState()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
 
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(
@@ -39,9 +47,30 @@ fun NavGraph() {
         )
     )
 
+    LaunchedEffect(sessionState.isLoggedIn, currentRoute) {
+        val route = currentRoute ?: return@LaunchedEffect
+        val authRoutes = setOf("login", "register1", "register2", "register3")
+        val protectedRoutes = setOf("schedule", "voice", "confirmation", "notifications", "records", "profile")
+
+        when {
+            !sessionState.isLoggedIn && route in protectedRoutes -> {
+                navController.navigate("login") {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+            sessionState.isLoggedIn && route in authRoutes -> {
+                navController.navigate("schedule") {
+                    popUpTo("login") { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = if (sessionState.isLoggedIn) "schedule" else "login"
     ) {
         composable("login") {
             LoginScreen(
@@ -89,92 +118,103 @@ fun NavGraph() {
         }
 
         composable("schedule") {
-            ScheduleScreen(
-                currentRoute = "schedule",
-                onNotificationsClick = { navController.navigate("notifications") },
-                onStartVoice = { navController.navigate("voice") },
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        popUpTo("schedule")
-                        launchSingleTop = true
+            if (sessionState.isLoggedIn) {
+                ScheduleScreen(
+                    currentRoute = "schedule",
+                    onNotificationsClick = { navController.navigate("notifications") },
+                    onStartVoice = { navController.navigate("voice") },
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo("schedule")
+                            launchSingleTop = true
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         composable("voice") {
+            if (sessionState.isLoggedIn) {
+                val repository = remember { RepositoryModule.provideVoiceRepository() }
 
-            val repository = remember { RepositoryModule.provideVoiceRepository()}
-
-            val viewModel: VoiceViewModel = viewModel(
-                factory = VoiceViewModelFactory(
-                    repository = repository,
-                    recorder = AudioRecorder(context),
-                    player = AudioPlayer(context),
-                    context = context
+                val viewModel: VoiceViewModel = viewModel(
+                    factory = VoiceViewModelFactory(
+                        repository = repository,
+                        recorder = AudioRecorder(context),
+                        player = AudioPlayer(context),
+                        context = context
+                    )
                 )
-            )
 
-            VoiceScreen(
-                viewModel = viewModel,
-                onEndCall = {
-                    if (viewModel.uiState.value.completed == true) {
-                        navController.navigate("confirmation") {
-                            popUpTo("confirmation") { inclusive = true }
+                VoiceScreen(
+                    viewModel = viewModel,
+                    onEndCall = {
+                        if (viewModel.uiState.value.completed == true) {
+                            navController.navigate("confirmation") {
+                                popUpTo("confirmation") { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate("schedule") {
+                                popUpTo("schedule") { inclusive = true }
+                            }
                         }
-                    } else {
+                    }
+                )
+            }
+        }
+        composable("confirmation") {
+            if (sessionState.isLoggedIn) {
+                ConfirmationScreen(
+                    onDone = {
                         navController.navigate("schedule") {
                             popUpTo("schedule") { inclusive = true }
                         }
                     }
-                }
-            )
-        }
-        composable("confirmation") {
-            ConfirmationScreen(
-                onDone = {
-                    navController.navigate("schedule") {
-                        popUpTo("schedule") { inclusive = true }
-                    }
-                }
-            )
+                )
+            }
         }
 
         composable("notifications") {
-            NotificationsScreen(
-                currentRoute = "notifications",
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        popUpTo("notifications")
-                        launchSingleTop = true
+            if (sessionState.isLoggedIn) {
+                NotificationsScreen(
+                    currentRoute = "notifications",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo("notifications")
+                            launchSingleTop = true
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         composable("records") {
-            RecordsScreen(
-                currentRoute = "records",
-                onNotificationsClick = { navController.navigate("notifications") },
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        popUpTo("records")
-                        launchSingleTop = true
+            if (sessionState.isLoggedIn) {
+                RecordsScreen(
+                    currentRoute = "records",
+                    onNotificationsClick = { navController.navigate("notifications") },
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo("records")
+                            launchSingleTop = true
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         composable("profile") {
-            ProfileScreen(
-                currentRoute = "profile",
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        popUpTo("profile")
-                        launchSingleTop = true
+            if (sessionState.isLoggedIn) {
+                ProfileScreen(
+                    currentRoute = "profile",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo("profile")
+                            launchSingleTop = true
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

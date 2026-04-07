@@ -12,5 +12,7 @@ interface AuthRepository {
         code: String,
     ): String
 
+    fun currentAccessToken(): String?
+
     fun currentUserId(): String?
 }

@@ -1,13 +1,8 @@
 package com.example.medix.presentation.ui.components.profile
 import androidx.compose.foundation.layout.*
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.*
-
 import androidx.compose.runtime.Composable
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -15,16 +10,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TopBarProfile() {
+fun TopBarProfile(
+    onLogout: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Text(
             text = "Mi Perfil",
             fontWeight = FontWeight.Bold,
             fontSize = 26.sp
         )
+
+        TextButton(onClick = onLogout) {
+            Text("Cerrar sesion")
+        }
     }
 }
