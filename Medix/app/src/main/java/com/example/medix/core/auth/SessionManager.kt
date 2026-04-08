@@ -57,4 +57,8 @@ object SessionManager {
     }
 
     fun getPacienteId(): Long? = pacienteId
+
+    fun getPacienteIdOrThrow(): Long {
+        return pacienteId ?: throw IllegalStateException("Paciente no logueado")
+    }
 }

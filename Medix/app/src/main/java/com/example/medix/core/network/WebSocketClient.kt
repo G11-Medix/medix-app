@@ -46,7 +46,7 @@ class WebSocketClient(
                     reconnectJob = null
                     reconnectAttempts = 0
                     onStateChanged(true)
-                    val idPaciente = SessionManager.getPacienteId()
+                    val idPaciente = SessionManager.getPacienteIdOrThrow()
 
                     if (idPaciente != null) {
                         val initMessage = """
