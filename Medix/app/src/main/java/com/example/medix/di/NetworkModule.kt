@@ -45,7 +45,7 @@ object NetworkModule {
 
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
+            .baseUrl(BuildConfig.MEDIX_API_BASE_URL)
             .client(provideOkHttp())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
