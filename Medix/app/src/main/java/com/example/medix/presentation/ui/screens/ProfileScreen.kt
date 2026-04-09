@@ -127,19 +127,10 @@ fun ProfileScreen(
 
                         SectionTitle("Contacto y Seguridad")
 
-                        InfoCardWithStatus(
-                            icon = Icons.Default.Email,
-                            title = "Correo",
-                            value = profile.correo,
-                            status = if (profile.correoVerificado) "Verified" else "Not verified"
-                        )
+                        InfoCard(Icons.Default.Email, "Correo", profile.correo)
+                        InfoCard(Icons.Default.Phone, "Telefono", profile.telefono)
 
-                        InfoCardWithButton(
-                            icon = Icons.Default.Phone,
-                            title = "Telefono",
-                            value = profile.telefono,
-                            buttonText = if (profile.telefonoVerificado) "Verified" else "Verify"
-                        )
+
                     }
                 }
             }
