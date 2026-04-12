@@ -6,8 +6,7 @@ import retrofit2.http.Path
 
 interface AppointmentApi {
 
-
-    @GET("api/app/citas/{id_paciente}")
+    @GET("api/pacientes/{id_paciente}/citas")
     suspend fun getAppointments(
         @Path("id_paciente") idPaciente: Int
     ): List<AppointmentDto>

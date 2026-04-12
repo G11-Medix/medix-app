@@ -6,7 +6,8 @@ import retrofit2.http.Path
 
 interface ProfileApi {
 
-    @GET("api/app/profile/{id_paciente}")
+
+    @GET("api/pacientes/{id_paciente}/profile")
     suspend fun getProfile(
         @Path("id_paciente") idPaciente: Int
     ): UserProfileDto
