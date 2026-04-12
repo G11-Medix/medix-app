@@ -34,6 +34,10 @@ fun RecordsScreen(
 
     val state by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.loadAppointments()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

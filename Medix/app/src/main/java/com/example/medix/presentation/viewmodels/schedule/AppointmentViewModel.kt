@@ -20,10 +20,12 @@ class AppointmentViewModel @Inject constructor(
         MutableStateFlow<UiState<List<Appointment>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<Appointment>>> = _uiState.asStateFlow()
 
+
+/*
     init {
         loadAppointments()
     }
-
+*/
     fun loadAppointments() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading

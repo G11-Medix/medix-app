@@ -271,7 +271,7 @@ class AuthViewModel @Inject constructor(
 
                     val userId = authRepository.verifyOtp(normalizedPhone, otpCode)
                     persistAuthenticatedSession()
-                    pacienteRepository.createPaciente(
+                    val pacienteResponse = pacienteRepository.createPaciente(
                         CreatePacienteRequest(
                             tipoDocumento = form.tipoDocumento,
                             numeroDocumento = form.numeroDocumento.trim(),
@@ -281,10 +281,16 @@ class AuthViewModel @Inject constructor(
                             telefono = normalizedPhone,
                             correo = form.correo.trim().ifBlank { null },
                             estado = "ACTIVO",
-                            idUsuario = userId,
                             idEps = form.idEps.trim().toLong(),
                         )
                     )
+
+                    sessionManager.saveSession(
+                        token = authRepository.currentAccessToken()!!,
+                        refreshToken = authRepository.currentRefreshToken(),
+                        pacienteId = pacienteResponse.idPaciente
+                    )
+
                     RegistrationResult.PacienteCreated
                 }
             }.onSuccess {

@@ -28,8 +28,12 @@ fun ScheduleScreen(
 
     val viewModel: AppointmentViewModel = hiltViewModel()
 
-    // 🔥 IMPORTANTE: esto hace que Compose REACCIONE a los cambios
+
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadAppointments()
+    }
 
     Column(
         modifier = Modifier
