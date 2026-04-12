@@ -49,9 +49,7 @@ fun ProfileScreen(
 
         TopBarProfile(
             onLogout = {
-                viewModel.logout {
-                    onNavigate("login") // o ruta que uses
-                }
+                viewModel.logout()
             }
         )
 
