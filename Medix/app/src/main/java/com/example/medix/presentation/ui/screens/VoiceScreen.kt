@@ -23,7 +23,7 @@ import androidx.core.content.ContextCompat
 import com.example.medix.presentation.ui.components.voice.*
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 
-private const val DEFAULT_SCHEDULING_PROMPT = "Quiero empezar el agendamiento de una cita médica."
+private const val DEFAULT_SCHEDULING_PROMPT = "Hola Medix"
 
 @Composable
 fun VoiceScreen(

@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.example.medix.presentation.ui.components.confirmation.AppointmentInfoCard
 import com.example.medix.presentation.ui.components.confirmation.OpenStreetMapView
@@ -22,16 +21,13 @@ import com.example.medix.presentation.ui.components.confirmation.SuccessHeader
 import com.example.medix.presentation.ui.components.confirmation.TopBarConfirmation
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.confirmation.ConfirmationViewModel
-import com.example.medix.presentation.viewmodels.confirmation.ConfirmationViewModelFactory
-
+import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun ConfirmationScreen(
     onDone: () -> Unit
 ) {
 
-    val viewModel: ConfirmationViewModel = viewModel(
-        factory = ConfirmationViewModelFactory()
-    )
+    val viewModel: ConfirmationViewModel = hiltViewModel()
 
     val state = viewModel.uiState
 
@@ -46,9 +42,7 @@ fun ConfirmationScreen(
             .padding(16.dp)
     ) {
 
-
         TopBarConfirmation()
-
 
         Box(
             modifier = Modifier
@@ -58,7 +52,6 @@ fun ConfirmationScreen(
 
             when (state) {
 
-
                 is UiState.Loading -> {
                     Box(
                         Modifier.fillMaxSize(),
@@ -67,7 +60,6 @@ fun ConfirmationScreen(
                         CircularProgressIndicator()
                     }
                 }
-
 
                 is UiState.Error -> {
                     Column(
@@ -89,7 +81,6 @@ fun ConfirmationScreen(
                     }
                 }
 
-
                 is UiState.Success -> {
 
                     val data = state.data
@@ -97,7 +88,6 @@ fun ConfirmationScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
 
                         SuccessHeader(
                             title = data.title,
@@ -107,11 +97,9 @@ fun ConfirmationScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-
                         AppointmentInfoCard(data)
 
                         Spacer(modifier = Modifier.height(16.dp))
-
 
                         Card(
                             shape = RoundedCornerShape(20.dp),
@@ -141,7 +129,6 @@ fun ConfirmationScreen(
                 }
             }
         }
-
 
         Button(
             onClick = onDone,

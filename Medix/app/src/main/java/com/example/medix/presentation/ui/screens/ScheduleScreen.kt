@@ -2,26 +2,21 @@ package com.example.medix.presentation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.medix.di.RepositoryModule
+import androidx.hilt.navigation.compose.hiltViewModel
+
 import com.example.medix.presentation.ui.components.*
-import com.example.medix.presentation.ui.components.HeaderSection
 import com.example.medix.presentation.ui.components.schedule.AppointmentSection
 import com.example.medix.presentation.ui.components.schedule.GreetingSection
 import com.example.medix.presentation.ui.components.schedule.VoiceCard
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
-import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModelFactory
-
+import com.example.medix.domain.entities.Appointment
 
 @Composable
 fun ScheduleScreen(
@@ -31,13 +26,10 @@ fun ScheduleScreen(
     onStartVoice: () -> Unit
 ) {
 
-    val repository = remember { RepositoryModule.provideAppointmentRepository() }
+    val viewModel: AppointmentViewModel = hiltViewModel()
 
-    val viewModel: AppointmentViewModel = viewModel(
-        factory = AppointmentViewModelFactory(repository)
-    )
-
-    val state = viewModel.uiState
+    // 🔥 IMPORTANTE: esto hace que Compose REACCIONE a los cambios
+    val state by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -58,8 +50,8 @@ fun ScheduleScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
 
+        // 🔥 UI por estados
         when (state) {
-
 
             is UiState.Loading -> {
                 Box(
@@ -70,27 +62,33 @@ fun ScheduleScreen(
                 }
             }
 
-
             is UiState.Error -> {
+                val error = state as UiState.Error
+
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = state.message, color = Color.Red)
+                    Text(
+                        text = error.message,
+                        color = Color.Red
+                    )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Button(onClick = { viewModel.loadAppointments() }) {
+                    Button(
+                        onClick = { viewModel.loadAppointments() }
+                    ) {
                         Text("Reintentar")
                     }
                 }
             }
 
-
-            is UiState.Success -> {
+            is UiState.Success<*> -> {
+                val success = state as UiState.Success<List<Appointment>>
 
                 AppointmentSection(
-                    appointments = viewModel.upcomingAppointments.take(2),
+                    appointments = success.data.take(2),
                     onSeeAllClick = {
                         onNavigate("records")
                     }

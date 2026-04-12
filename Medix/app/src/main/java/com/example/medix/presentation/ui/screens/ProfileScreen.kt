@@ -1,28 +1,27 @@
 package com.example.medix.presentation.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+
 import com.example.medix.core.auth.SessionManager
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.SectionTitle
 import com.example.medix.presentation.ui.components.profile.InfoCard
-import com.example.medix.presentation.ui.components.profile.InfoCardWithButton
-import com.example.medix.presentation.ui.components.profile.InfoCardWithStatus
 import com.example.medix.presentation.ui.components.profile.TopBarProfile
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
-import com.example.medix.presentation.viewmodels.profile.ProfileViewModelFactory
+import com.example.medix.data.dto.UserProfileDto
 
 @Composable
 fun ProfileScreen(
@@ -30,12 +29,11 @@ fun ProfileScreen(
     onNavigate: (String) -> Unit
 ) {
 
-    val viewModel: ProfileViewModel = viewModel(
-        factory = ProfileViewModelFactory()
-    )
+    val viewModel: ProfileViewModel = hiltViewModel()
 
-    val state = viewModel.uiState
-    val onLogout = { SessionManager.clearSession() }
+    val state by viewModel.uiState.collectAsState()
+
+
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
@@ -49,8 +47,13 @@ fun ProfileScreen(
             .padding(16.dp)
     ) {
 
-        TopBarProfile(onLogout = onLogout)
-
+        TopBarProfile(
+            onLogout = {
+                viewModel.logout {
+                    onNavigate("login") // o ruta que uses
+                }
+            }
+        )
 
         Box(
             modifier = Modifier
@@ -59,7 +62,6 @@ fun ProfileScreen(
         ) {
 
             when (state) {
-
 
                 is UiState.Loading -> {
                     Box(
@@ -70,15 +72,16 @@ fun ProfileScreen(
                     }
                 }
 
-
                 is UiState.Error -> {
+                    val error = state as UiState.Error
+
                     Box(
                         Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                            Text(text = state.message, color = Color.Red)
+                            Text(text = error.message, color = Color.Red)
 
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -89,10 +92,11 @@ fun ProfileScreen(
                     }
                 }
 
+                is UiState.Success<*> -> {
 
-                is UiState.Success -> {
+                    val profile = (state as UiState.Success<*>).data as? UserProfileDto
 
-                    val profile = state.data
+                    if (profile == null) return@Box
 
                     Column {
 
@@ -129,13 +133,10 @@ fun ProfileScreen(
 
                         InfoCard(Icons.Default.Email, "Correo", profile.correo)
                         InfoCard(Icons.Default.Phone, "Telefono", profile.telefono)
-
-
                     }
                 }
             }
         }
-
 
         BottomNavigationBar(
             currentRoute = currentRoute,

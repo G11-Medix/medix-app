@@ -7,17 +7,22 @@ import io.github.jan.supabase.createSupabaseClient
 
 object SupabaseProvider {
 
-    fun createClientOrNull(): SupabaseClient? {
+    fun createClient(): SupabaseClient {
+
         val supabaseUrl = BuildConfig.SUPABASE_URL
         val supabaseAnonKey = BuildConfig.SUPABASE_ANON_KEY
 
-        if (supabaseUrl.isBlank() || supabaseAnonKey.isBlank()) {
-            return null
+        require(supabaseUrl.isNotBlank()) {
+            "SUPABASE_URL no está configurado en BuildConfig"
+        }
+
+        require(supabaseAnonKey.isNotBlank()) {
+            "SUPABASE_ANON_KEY no está configurado en BuildConfig"
         }
 
         return createSupabaseClient(
             supabaseUrl = supabaseUrl,
-            supabaseKey = supabaseAnonKey,
+            supabaseKey = supabaseAnonKey
         ) {
             install(Auth)
         }

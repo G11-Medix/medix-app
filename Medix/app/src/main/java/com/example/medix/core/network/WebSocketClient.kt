@@ -13,13 +13,11 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class WebSocketClient(
-    private val client: OkHttpClient = OkHttpClient.Builder()
-        .readTimeout(0, TimeUnit.MILLISECONDS)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .pingInterval(30, TimeUnit.SECONDS)
-        .build(),
+class WebSocketClient @Inject constructor(
+    private val sessionManager: SessionManager,
+    private val client: OkHttpClient
 ) {
 
     private var webSocket: WebSocket? = null
@@ -46,19 +44,19 @@ class WebSocketClient(
                     reconnectJob = null
                     reconnectAttempts = 0
                     onStateChanged(true)
-                    val idPaciente = SessionManager.getPacienteIdOrThrow()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val idPaciente = sessionManager.getPacienteId()
 
-                    if (idPaciente != null) {
-                        val initMessage = """
-                            {
-                                "type": "init",
-                                "id_paciente": $idPaciente
-                            }
-                        """.trimIndent()
+                        if (idPaciente != null) {
+                            val initMessage = """
+                                {
+                                    "type": "init",
+                                    "id_paciente": $idPaciente
+                                }
+                            """.trimIndent()
 
-                        webSocket.send(initMessage)
-                    } else {
-                        Log.e("WebSocketClient", "⚠ id_paciente is null")
+                            webSocket.send(initMessage)
+                        }
                     }
                 }
 

@@ -2,22 +2,19 @@ package com.example.medix.presentation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-
 import androidx.compose.material3.*
-
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.medix.core.utils.DateUtils
-import com.example.medix.di.RepositoryModule
+
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 
+import com.example.medix.core.utils.DateUtils
 import com.example.medix.presentation.ui.components.records.AppointmentCard
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.HeaderSection
@@ -25,8 +22,6 @@ import com.example.medix.presentation.ui.components.records.PastAppointmentCard
 import com.example.medix.presentation.ui.components.SectionTitle
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
-import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModelFactory
-
 
 @Composable
 fun RecordsScreen(
@@ -35,13 +30,9 @@ fun RecordsScreen(
     onNotificationsClick: () -> Unit
 ) {
 
-    val repository = remember { RepositoryModule.provideAppointmentRepository() }
+    val viewModel: AppointmentViewModel = hiltViewModel()
 
-    val viewModel: AppointmentViewModel = viewModel(
-        factory = AppointmentViewModelFactory(repository)
-    )
-
-    val state = viewModel.uiState
+    val state by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -64,7 +55,6 @@ fun RecordsScreen(
 
         when (state) {
 
-
             is UiState.Loading -> {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     CircularProgressIndicator(
@@ -73,17 +63,15 @@ fun RecordsScreen(
                 }
             }
 
-
             is UiState.Error -> {
+                val error = state as UiState.Error
+
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Text(
-                        text = state.message,
-                        color = Color.Red
-                    )
+                    Text(text = error.message, color = Color.Red)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -93,13 +81,14 @@ fun RecordsScreen(
                 }
             }
 
-
             is UiState.Success -> {
+
+                val data = (state as UiState.Success<List<com.example.medix.domain.entities.Appointment>>).data
 
                 val upcoming = viewModel.upcomingAppointments
                 val past = viewModel.pastAppointments
 
-                if (upcoming.isEmpty() && past.isEmpty()) {
+                if (data.isEmpty()) {
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -124,10 +113,7 @@ fun RecordsScreen(
                     SectionTitle("Próximas citas")
 
                     if (upcoming.isEmpty()) {
-                        Text(
-                            text = "No tienes citas próximas",
-                            color = Color.Gray
-                        )
+                        Text("No tienes citas próximas", color = Color.Gray)
                     } else {
                         upcoming.take(5).forEach {
                             AppointmentCard(
@@ -144,10 +130,7 @@ fun RecordsScreen(
                     SectionTitle("Citas Pasadas")
 
                     if (past.isEmpty()) {
-                        Text(
-                            text = "No tienes citas pasadas",
-                            color = Color.Gray
-                        )
+                        Text("No tienes citas pasadas", color = Color.Gray)
                     } else {
                         past.take(5).forEach {
                             PastAppointmentCard(

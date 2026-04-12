@@ -1,25 +1,29 @@
 package com.example.medix.core.auth
 
+import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
+import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 
-class AuthInterceptor : Interceptor {
+class AuthInterceptor @Inject constructor(
+    private val sessionManager: SessionManager
+) : Interceptor {
+
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = SessionManager.getToken()
-        val request = chain.request()
-        val newRequest = if (token != null) {
-            request.newBuilder()
-                .addHeader("Authorization", "Bearer $token")
-                .build()
-        } else {
-            request
+
+        val token = runBlocking {
+            sessionManager.getToken()
         }
 
-        val response = chain.proceed(newRequest)
-        if (response.code == 401) {
-            SessionManager.clearSession()
-        }
+        Log.d("AUTH", "TOKEN = $token")
 
-        return response
+        val request = chain.request().newBuilder().apply {
+            token?.let {
+                addHeader("Authorization", "Bearer $token")
+            }
+        }.build()
+
+        return chain.proceed(request)
     }
 }

@@ -1,5 +1,6 @@
 package com.example.medix.data.repositories
 
+import android.util.Log
 import com.example.medix.core.network.PacienteApiService
 import com.example.medix.data.dto.AuthEligibilityDto
 import com.example.medix.data.dto.CreatePacienteRequest
@@ -26,6 +27,18 @@ class PacienteRepositoryImpl(
     }
 
     override suspend fun createPaciente(request: CreatePacienteRequest): PacienteDto {
-        return apiService.createPaciente(request)
+
+        Log.d("PacienteRepo", "CREATE PACIENTE REQUEST => $request")
+
+        return try {
+            val response = apiService.createPaciente(request)
+
+            Log.d("PacienteRepo", "CREATE PACIENTE RESPONSE => $response")
+
+            response
+        } catch (e: Exception) {
+            Log.e("PacienteRepo", "CREATE PACIENTE ERROR", e)
+            throw e
+        }
     }
 }

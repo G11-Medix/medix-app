@@ -1,6 +1,7 @@
 package com.example.medix.data.repositories
 
 import android.util.Log
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.core.network.ApiService
 import com.example.medix.core.network.WebSocketClient
 import com.example.medix.core.utils.Constants
@@ -15,7 +16,7 @@ import java.io.File
 
 class VoiceRepositoryImpl(
     private val apiService: ApiService,
-    private val webSocketClient: WebSocketClient,
+    private val webSocketClient: WebSocketClient
 ) : VoiceRepository {
 
     override suspend fun transcribeAudio(audioFile: File): String {

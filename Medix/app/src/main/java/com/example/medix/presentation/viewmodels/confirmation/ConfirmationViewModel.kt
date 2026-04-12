@@ -1,15 +1,19 @@
 package com.example.medix.presentation.viewmodels.confirmation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.*
 import com.example.medix.data.dto.AppointmentConfirmationDto
 import com.example.medix.domain.repositories.ConfirmationRepository
 import com.example.medix.presentation.ui.state.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-
-class ConfirmationViewModel(
+@HiltViewModel
+class ConfirmationViewModel @Inject constructor(
     private val repository: ConfirmationRepository
 ) : ViewModel() {
 
@@ -20,7 +24,8 @@ class ConfirmationViewModel(
         viewModelScope.launch {
             uiState = UiState.Loading
             try {
-                uiState = UiState.Success(repository.getConfirmation())
+                val data = repository.getConfirmation()
+                uiState = UiState.Success(data)
             } catch (e: Exception) {
                 uiState = UiState.Error("Error al cargar confirmación")
             }
