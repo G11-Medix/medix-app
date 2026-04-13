@@ -1,8 +1,10 @@
 package com.example.medix.core.utils
 
+import com.example.medix.BuildConfig
+
 object Constants {
-    const val BASE_URL = ""
+    const val BASE_URL = BuildConfig.MEDIX_DATA_API_BASE_URL
 
     fun webSocketUrl(sessionId: String): String =
-        "ws://192.168.20.10:8000/ws/conversation/$sessionId"
+        "${BuildConfig.MEDIX_WS_BASE_URL.trimEnd('/')}/ws/conversation/$sessionId"
 }

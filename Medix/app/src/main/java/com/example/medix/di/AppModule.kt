@@ -19,6 +19,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -83,13 +84,28 @@ object AppModule {
     }
 
     // =========================
-    // RETROFIT
+    // RETROFIT (DATA)
     // =========================
     @Provides
     @Singleton
-    fun provideRetrofit(client: OkHttpClient): Retrofit {
+    @Named("dataRetrofit")
+    fun provideDataRetrofit(client: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.MEDIX_API_BASE_URL)
+            .baseUrl(BuildConfig.MEDIX_DATA_API_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // =========================
+    // RETROFIT (IA)
+    // =========================
+    @Provides
+    @Singleton
+    @Named("iaRetrofit")
+    fun provideIaRetrofit(client: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.MEDIX_AI_API_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -115,27 +131,27 @@ object AppModule {
     // =========================
     @Provides
     @Singleton
-    fun provideAppointmentApi(retrofit: Retrofit): AppointmentApi =
+    fun provideAppointmentApi(@Named("dataRetrofit") retrofit: Retrofit): AppointmentApi =
         retrofit.create(AppointmentApi::class.java)
 
     @Provides
     @Singleton
-    fun provideProfileApi(retrofit: Retrofit): ProfileApi =
+    fun provideProfileApi(@Named("dataRetrofit") retrofit: Retrofit): ProfileApi =
         retrofit.create(ProfileApi::class.java)
 
     @Provides
     @Singleton
-    fun provideConfirmationApi(retrofit: Retrofit): ConfirmationApi =
+    fun provideConfirmationApi(@Named("dataRetrofit") retrofit: Retrofit): ConfirmationApi =
         retrofit.create(ConfirmationApi::class.java)
 
     @Provides
     @Singleton
-    fun providePacienteApi(retrofit: Retrofit): PacienteApiService =
+    fun providePacienteApi(@Named("dataRetrofit") retrofit: Retrofit): PacienteApiService =
         retrofit.create(PacienteApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideVoiceApi(retrofit: Retrofit): ApiService =
+    fun provideVoiceApi(@Named("iaRetrofit") retrofit: Retrofit): ApiService =
         retrofit.create(ApiService::class.java)
 
     // =========================
