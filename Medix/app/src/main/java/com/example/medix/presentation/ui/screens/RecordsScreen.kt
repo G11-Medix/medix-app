@@ -43,9 +43,9 @@ fun RecordsScreen(
     val isLandscape =
         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    LaunchedEffect(Unit) {
-        viewModel.loadAppointments()
-    }
+//    LaunchedEffect(Unit) {
+//        viewModel.loadAppointments()
+//    }
 
     Box(
         modifier = Modifier
