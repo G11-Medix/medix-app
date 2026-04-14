@@ -5,6 +5,7 @@ import android.media.AudioManager
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.domain.repositories.VoiceRepository
 import com.example.medix.presentation.viewmodels.status.ConversationStatus
 import com.example.medix.presentation.viewmodels.status.VoiceUiState
@@ -23,7 +24,9 @@ import javax.inject.Inject
 class VoiceViewModel @Inject constructor(
     private val repository: VoiceRepository,
     private val recorder: AudioRecorder,
+    private val sessionManager: SessionManager,
     private val player: AudioPlayer,
+
     @ApplicationContext context: Context
 ) : ViewModel() {
 
@@ -41,8 +44,21 @@ class VoiceViewModel @Inject constructor(
     private var isRecordingPressActive = false
     private var wsReadyForSession = false
 
+    /*
     init {
         connectWebSocket()
+    }
+    */
+    init {
+        viewModelScope.launch {
+            sessionManager.sessionFlow
+                .map { it.pacienteId }
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collectLatest {
+                    connectWebSocket()
+                }
+        }
     }
 
     fun startSchedulingSession(prompt: String) {

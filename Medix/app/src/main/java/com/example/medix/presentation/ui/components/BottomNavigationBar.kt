@@ -16,7 +16,7 @@ fun BottomNavigationBar(
             selected = currentRoute == "schedule",
             onClick = { onNavigate("schedule") },
             icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text("Agendar") }
+            label = { Text("Aendar") }
         )
 
         NavigationBarItem(
