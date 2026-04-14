@@ -84,7 +84,7 @@ fun VoiceScreen(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    TopBar()
+                    //TopBar()
 
                     Spacer(Modifier.height(16.dp))
 
@@ -146,7 +146,7 @@ fun VoiceScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                TopBar()
+                //TopBar()
 
                 Spacer(Modifier.height(16.dp))
 
