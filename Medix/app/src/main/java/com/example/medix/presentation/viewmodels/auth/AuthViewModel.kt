@@ -11,15 +11,18 @@ import com.example.medix.domain.repositories.PacienteRepository
 import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
 import com.example.medix.presentation.viewmodels.status.AuthUiState
 import com.example.medix.presentation.viewmodels.status.PacienteFormState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-class AuthViewModel(
+import javax.inject.Inject
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val pacienteRepository: PacienteRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
     companion object {
         private const val TAG = "AuthViewModel"
@@ -86,6 +89,10 @@ class AuthViewModel(
         }
 
         sendLoginOtp(normalizedPhone, isResend = false)
+    }
+
+    fun resetAuthState() {
+        _uiState.value = AuthUiState()
     }
 
     fun resendLoginOtp() {
@@ -202,8 +209,24 @@ class AuthViewModel(
         viewModelScope.launch {
             setLoading(true)
             runCatching {
-                authRepository.verifyOtp(normalizedPhone, otpCode)
-                persistAuthenticatedSession()
+                val userId = authRepository.verifyOtp(normalizedPhone, otpCode)
+                val eligibility = pacienteRepository
+                    .getAuthEligibilityByTelefono(normalizedPhone)
+                    ?: error("No se pudo obtener la elegibilidad")
+
+                val paciente = eligibility.paciente
+                    ?: error("No se pudo obtener el paciente")
+
+                val pacienteId = paciente.id_paciente
+                    ?: error("El paciente no tiene id_paciente")
+
+                sessionManager.saveSession(
+                    token = authRepository.currentAccessToken()
+                        ?: error("No token"),
+                    refreshToken = authRepository.currentRefreshToken(),
+                    pacienteId = pacienteId
+                )
+
             }.onSuccess {
                 _uiState.update {
                     it.copy(
@@ -252,20 +275,26 @@ class AuthViewModel(
 
                     val userId = authRepository.verifyOtp(normalizedPhone, otpCode)
                     persistAuthenticatedSession()
-                    pacienteRepository.createPaciente(
+                    val pacienteResponse = pacienteRepository.createPaciente(
                         CreatePacienteRequest(
                             tipoDocumento = form.tipoDocumento,
                             numeroDocumento = form.numeroDocumento.trim(),
                             nombres = form.nombres.trim(),
                             apellidos = form.apellidos.trim(),
-                            fechaNacimiento = form.fechaNacimiento.trim(),
+                            fechaNacimiento = normalizeDate(form.fechaNacimiento),
                             telefono = normalizedPhone,
                             correo = form.correo.trim().ifBlank { null },
                             estado = "ACTIVO",
-                            idUsuario = userId,
                             idEps = form.idEps.trim().toLong(),
                         )
                     )
+
+                    sessionManager.saveSession(
+                        token = authRepository.currentAccessToken()!!,
+                        refreshToken = authRepository.currentRefreshToken(),
+                        pacienteId = pacienteResponse.idPaciente
+                    )
+
                     RegistrationResult.PacienteCreated
                 }
             }.onSuccess {
@@ -294,6 +323,24 @@ class AuthViewModel(
 
     fun onNavigationHandled() {
         _uiState.update { it.copy(navigationTarget = AuthNavigationTarget.NONE) }
+    }
+
+    private fun normalizeDate(input: String): String {
+        return try {
+            val parts = input.split("/")
+
+            if (parts.size == 3) {
+                val day = parts[0].padStart(2, '0')
+                val month = parts[1].padStart(2, '0')
+                val year = parts[2]
+
+                "$year-$month-$day"
+            } else {
+                input
+            }
+        } catch (e: Exception) {
+            input
+        }
     }
 
     private fun validatePacienteForm(
@@ -381,11 +428,12 @@ class AuthViewModel(
         authRepository.requestOtp(normalizedPhone, createUser = true)
     }
 
-    private fun persistAuthenticatedSession() {
-        val accessToken = authRepository.currentAccessToken()
-            ?: error("Supabase autenticó el OTP pero no devolvió un access token.")
-
-        SessionManager.saveSession(accessToken)
+    private suspend fun persistAuthenticatedSession() {
+        sessionManager.saveSession(
+            token = authRepository.currentAccessToken()!!,
+            refreshToken = authRepository.currentRefreshToken(),
+            pacienteId = null
+        )
     }
 
     private sealed interface RegistrationResult {
@@ -394,5 +442,9 @@ class AuthViewModel(
             val isResend: Boolean,
         ) : RegistrationResult
         data object PacienteCreated : RegistrationResult
+    }
+
+    fun resetPacienteForm() {
+        _uiState.update { it.copy(pacienteForm = PacienteFormState()) }
     }
 }

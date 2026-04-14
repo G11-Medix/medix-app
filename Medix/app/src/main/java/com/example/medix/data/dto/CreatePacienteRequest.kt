@@ -14,8 +14,6 @@ data class CreatePacienteRequest(
     val telefono: String?,
     val correo: String?,
     val estado: String,
-    @SerializedName("id_usuario")
-    val idUsuario: String?,
     @SerializedName("id_eps")
     val idEps: Long,
 )

@@ -1,11 +1,9 @@
 package com.example.medix.presentation.ui.components.voice
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.*
-
-import androidx.compose.runtime.*
-
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
@@ -13,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TranscriptCard(title:String, text: String) {
+fun TranscriptCard(title: String, text: String) {
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -23,17 +21,18 @@ fun TranscriptCard(title:String, text: String) {
         Column(modifier = Modifier.padding(16.dp)) {
 
             Text(
-                text = "\"$title\"",
-                fontSize = 10.sp,
-                color = Color(0xFF1E88E5)
+                text = title,
+                fontSize = 14.sp,
+                color = Color(0xFF1565C0)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "\"$text\"",
+                text = text,
                 fontStyle = FontStyle.Italic,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                lineHeight = 22.sp
             )
         }
     }

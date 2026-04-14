@@ -16,15 +16,9 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun TopBarConfirmation() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Text(
-            text = "Confirmación",
-            fontWeight = FontWeight.Bold,
-            fontSize = 26.sp
-        )
-    }
+    Text(
+        text = "Confirmación",
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.fillMaxWidth()
+    )
 }

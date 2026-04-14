@@ -5,29 +5,33 @@ import android.media.AudioManager
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.domain.repositories.VoiceRepository
 import com.example.medix.presentation.viewmodels.status.ConversationStatus
 import com.example.medix.presentation.viewmodels.status.VoiceUiState
 import com.example.medix.services.AudioPlayer
 import com.example.medix.services.AudioRecorder
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.File
+import javax.inject.Inject
 
-class VoiceViewModel(
+@HiltViewModel
+class VoiceViewModel @Inject constructor(
     private val repository: VoiceRepository,
     private val recorder: AudioRecorder,
+    private val sessionManager: SessionManager,
     private val player: AudioPlayer,
-    context: Context,
+
+    @ApplicationContext context: Context
 ) : ViewModel() {
 
     private val audioManager =
-        context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     private val _uiState = MutableStateFlow(VoiceUiState())
     val uiState: StateFlow<VoiceUiState> = _uiState.asStateFlow()
@@ -40,34 +44,39 @@ class VoiceViewModel(
     private var isRecordingPressActive = false
     private var wsReadyForSession = false
 
+    /*
     init {
-        Log.d("VoiceViewModel", "Initializing VoiceViewModel with sessionId: ${_uiState.value.sessionId}")
         connectWebSocket()
+    }
+    */
+    init {
+        viewModelScope.launch {
+            sessionManager.sessionFlow
+                .map { it.pacienteId }
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collectLatest {
+                    connectWebSocket()
+                }
+        }
     }
 
     fun startSchedulingSession(prompt: String) {
-        Log.d("VoiceViewModel", "startSchedulingSession called with prompt: $prompt")
-        Log.d("VoiceViewModel", "wsConnected: ${uiState.value.wsConnected}, wsReadyForSession: $wsReadyForSession")
-
         if (uiState.value.wsConnected && wsReadyForSession) {
-            Log.i("VoiceViewModel", "Sending prompt via WebSocket")
             sendTextByWebSocket(prompt)
         } else {
-            Log.i("VoiceViewModel", "WebSocket not ready, will retry in 500ms")
             viewModelScope.launch {
                 delay(500)
                 if (uiState.value.wsConnected && wsReadyForSession) {
-                    Log.i("VoiceViewModel", "Retrying prompt via WebSocket")
                     sendTextByWebSocket(prompt)
                 } else {
-                    Log.i("VoiceViewModel", "Sending prompt via HTTP fallback")
                     sendTextMessage(prompt)
                 }
             }
         }
     }
 
-    // Recording
+    // RECORDING
 
     fun startRecording() {
         if (isProcessingAudio || isRecordingPressActive) return
@@ -75,91 +84,76 @@ class VoiceViewModel(
         runCatching {
             currentAudioFile = recorder.start()
             isRecordingPressActive = true
+
             _uiState.update {
                 it.copy(
                     status = ConversationStatus.LISTENING,
                     errorMessage = null,
                 )
             }
-            Log.d("VoiceViewModel", "Recording started")
         }.onFailure {
-            Log.e("VoiceViewModel", "Recording start failed", it)
-            showError("No se pudo iniciar la grabación: ${it.localizedMessage}")
+            showError("No se pudo iniciar la grabación")
         }
     }
 
     fun stopRecordingAndSend() {
         if (!isRecordingPressActive || isProcessingAudio) return
-        isRecordingPressActive = false
 
+        isRecordingPressActive = false
         val audioFile = recorder.stop() ?: currentAudioFile
 
         if (audioFile == null) {
-            Log.w("VoiceViewModel", "No audio file to send")
-            showError("No se detectó audio para enviar.")
+            showError("No se detectó audio")
             return
         }
 
         isProcessingAudio = true
+
         _uiState.update {
             it.copy(
                 status = ConversationStatus.PROCESSING,
-                isLoading = true,
-                errorMessage = null,
+                isLoading = true
             )
         }
-        Log.d("VoiceViewModel", "Recording stopped, processing audio file: ${audioFile.name}")
 
         viewModelScope.launch {
             runCatching {
-                Log.d("VoiceViewModel", "Transcribing audio...")
                 val text = repository.transcribeAudio(audioFile)
-                Log.i("VoiceViewModel", "Transcription result: $text")
-                _uiState.update { it.copy(userText = text) }
 
-                if (text.isBlank()) {
-                    throw IllegalArgumentException("Transcription returned empty text")
-                }
+                if (text.isBlank()) error("Empty transcription")
 
                 val sentByWs = if (_uiState.value.wsConnected) {
                     repository.sendWebSocketMessage(text, _uiState.value.sessionId)
-                } else {
-                    false
-                }
+                } else false
 
                 if (sentByWs) {
-                    Log.i("VoiceViewModel", "Audio transcription sent via WebSocket")
                     _uiState.update {
                         it.copy(
                             status = ConversationStatus.RESPONDING,
-                            isLoading = true,
+                            isLoading = true
                         )
                     }
                     null
                 } else {
-                    Log.w("VoiceViewModel", "WebSocket unavailable, falling back to HTTP conversation")
                     repository.sendConversationMessage(text, _uiState.value.sessionId)
                 }
             }.onSuccess { response ->
-                if (response != null) {
-                    Log.i("VoiceViewModel", "Conversation response received: ${response.response}")
-                    updateAssistantResponse(response.response, response.completed)
+                response?.let {
+                    updateAssistantResponse(it.response, it.completed)
                 }
             }.onFailure {
-                Log.e("VoiceViewModel", "Error processing audio request", it)
-                showError("Error procesando la solicitud: ${it.localizedMessage}")
+                showError("Error procesando audio")
             }
+
             isProcessingAudio = false
         }
     }
 
-
-    // Text
+    // TEXT
 
     fun sendTextMessage(text: String) {
         if (text.isBlank()) return
 
-        Log.d("VoiceViewModel", "sendTextMessage: $text")
         _uiState.update {
             it.copy(
                 userText = text,
@@ -170,50 +164,36 @@ class VoiceViewModel(
 
         viewModelScope.launch {
             runCatching {
-                Log.d("VoiceViewModel", "Sending message via HTTP")
                 repository.sendConversationMessage(text, _uiState.value.sessionId)
-            }.onSuccess { response ->
-                Log.i("VoiceViewModel", "HTTP response received: ${response.response}")
-                updateAssistantResponse(response.response, response.completed)
+            }.onSuccess {
+                updateAssistantResponse(it.response, it.completed)
             }.onFailure {
-                Log.e("VoiceViewModel", "HTTP request failed", it)
-                showError("No se pudo enviar el texto: ${it.localizedMessage}")
+                showError("Error enviando texto")
             }
         }
     }
 
-    // Websocket
+    // WEBSOCKET
 
     private fun connectWebSocket() {
-        Log.d("VoiceViewModel", "Connecting WebSocket...")
-        repository.connectWebSocket(
-            sessionId = _uiState.value.sessionId,
-            onMessage = {
-                Log.d("VoiceViewModel", "WebSocket message received")
-                handleWebSocketPayload(it)
-            },
-            onStateChanged = { connected ->
-                Log.i("VoiceViewModel", "WebSocket state changed: connected=$connected")
-                _uiState.update { it.copy(wsConnected = connected) }
-                if (connected) {
-                    wsReadyForSession = true
-                    Log.i("VoiceViewModel", "WebSocket ready for session")
-                } else {
-                    wsReadyForSession = false
+        viewModelScope.launch {
+            repository.connectWebSocket(
+                sessionId = _uiState.value.sessionId,
+                onMessage = { handleWebSocketPayload(it) },
+                onStateChanged = { connected ->
+                    _uiState.update { it.copy(wsConnected = connected) }
+                    wsReadyForSession = connected
                 }
-            },
-        )
+            )
+        }
     }
 
     private fun handleWebSocketPayload(payload: String) {
         runCatching {
-            Log.d("VoiceViewModel", "Processing WebSocket payload: $payload")
             val json = JSONObject(payload)
             val response = json.optString("response")
             val state = json.optString("state")
             val completed = json.optBoolean("completed", false)
-
-            Log.d("VoiceViewModel", "Parsed - response: '${response.take(50)}...', state: $state, completed: $completed")
 
             val status = when (state.lowercase()) {
                 "listening" -> ConversationStatus.LISTENING
@@ -223,39 +203,29 @@ class VoiceViewModel(
             }
 
             if (response.isNotBlank()) {
-                Log.i("VoiceViewModel", "Updating assistant response from WebSocket")
                 updateAssistantResponse(response, completed)
             } else {
-                Log.d("VoiceViewModel", "No response in payload, updating status only")
                 _uiState.update {
                     it.copy(
                         status = status,
-                        isLoading = status == ConversationStatus.PROCESSING || status == ConversationStatus.RESPONDING,
+                        isLoading = status != ConversationStatus.IDLE
                     )
                 }
             }
-        }.onFailure {
-            Log.e("VoiceViewModel", "Error parsing WebSocket payload", it)
         }
     }
 
     fun sendTextByWebSocket(text: String) {
         if (text.isBlank()) return
 
-        Log.d("VoiceViewModel", "sendTextByWebSocket: $text, wsConnected: ${_uiState.value.wsConnected}")
-
         val sent = if (_uiState.value.wsConnected) {
             repository.sendWebSocketMessage(text, _uiState.value.sessionId)
-        } else {
-            false
-        }
+        } else false
 
         if (!sent) {
-            Log.w("VoiceViewModel", "WebSocket not connected/ready, falling back to HTTP")
             sendTextMessage(text)
             return
         }
-
 
         _uiState.update {
             it.copy(
@@ -264,43 +234,28 @@ class VoiceViewModel(
                 isLoading = true,
             )
         }
-        Log.d("VoiceViewModel", "Message sent via WebSocket")
     }
-
 
     fun toggleMute() {
         _isMuted.value = !_isMuted.value
     }
 
-    // response
-
     private fun updateAssistantResponse(response: String, completed: Boolean) {
-        Log.i("VoiceViewModel", "Updating assistant response: '${response.take(50)}...', completed: $completed")
-
         _uiState.update {
             it.copy(
                 assistantText = response,
                 status = if (completed) ConversationStatus.IDLE else ConversationStatus.RESPONDING,
                 isLoading = false,
-                completed = completed,
-                errorMessage = null,
+                completed = completed
             )
         }
 
         if (response.isNotBlank()) {
-            Log.d("VoiceViewModel", "Speaking response")
-
-            player.speak(
-                response,
-                isMuted = _isMuted.value
-            )
+            player.speak(response, isMuted = _isMuted.value)
         }
     }
 
-    // error
-
     private fun showError(message: String) {
-        Log.e("VoiceViewModel", "Error: $message")
         _uiState.update {
             it.copy(
                 status = ConversationStatus.ERROR,
@@ -311,7 +266,6 @@ class VoiceViewModel(
     }
 
     override fun onCleared() {
-        Log.d("VoiceViewModel", "onCleared called")
         repository.closeWebSocket()
         player.release()
         super.onCleared()

@@ -1,12 +1,14 @@
 package com.example.medix.presentation.ui.components.voice
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,7 +26,7 @@ fun CallControls(
     onSpeaker: () -> Unit,
     onMicHoldStart: () -> Unit,
     onMicHoldEnd: () -> Unit,
-){
+) {
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -33,18 +35,19 @@ fun CallControls(
 
         HoldControlButton(
             icon = if (isMicPressed) Icons.Default.Mic else Icons.Default.MicOff,
-            label = if (isMicPressed) "Hablando" else "Mantén para hablar",
+            label = "Micrófono",
             onHoldStart = onMicHoldStart,
             onHoldEnd = onMicHoldEnd,
         )
 
         ControlButton(
             icon = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
-            label = if (isMuted) "Silenciado" else "Sonido",
+            label = "Audio",
             onClick = onSpeaker
         )
     }
 }
+
 
 @Composable
 private fun HoldControlButton(
@@ -56,12 +59,12 @@ private fun HoldControlButton(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(100.dp)
+        modifier = Modifier.width(110.dp)
     ) {
 
         Box(
             modifier = Modifier
-                .size(50.dp)
+                .size(64.dp) // WCAG touch target
                 .background(Color.LightGray, CircleShape)
                 .pointerInput(Unit) {
                     detectTapGestures(
@@ -69,19 +72,26 @@ private fun HoldControlButton(
                             onHoldStart()
                             tryAwaitRelease()
                             onHoldEnd()
-                        },
+                        }
                     )
                 },
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null)
+            Icon(
+                icon,
+                contentDescription = label
+            )
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        Text(label, fontSize = 10.sp)
+        Text(
+            text = label,
+            fontSize = 12.sp
+        )
     }
 }
+
 
 @Composable
 fun ControlButton(
@@ -92,21 +102,29 @@ fun ControlButton(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(100.dp)
+        modifier = Modifier.width(110.dp)
     ) {
 
         Box(
             modifier = Modifier
-                .size(50.dp)
+                .size(64.dp)
                 .background(Color.LightGray, CircleShape)
-                .clickable { onClick() },
+                .pointerInput(Unit) {
+                    detectTapGestures { onClick() }
+                },
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null)
+            Icon(
+                icon,
+                contentDescription = label
+            )
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        Text(label, fontSize = 10.sp)
+        Text(
+            text = label,
+            fontSize = 12.sp
+        )
     }
 }

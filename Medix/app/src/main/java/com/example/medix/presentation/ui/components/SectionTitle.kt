@@ -26,19 +26,20 @@ fun SectionTitle(title: String) {
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
+
         Box(
             modifier = Modifier
-                .width(3.dp)
-                .height(16.dp)
-                .background(Color(0xFF1565C0))
+                .width(4.dp)
+                .height(20.dp)
+                .background(MaterialTheme.colorScheme.primary)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Text(
             text = title,
-            color = Color(0xFF1565C0),
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }

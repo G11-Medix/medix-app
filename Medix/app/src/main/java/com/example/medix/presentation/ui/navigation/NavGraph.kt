@@ -1,217 +1,169 @@
 package com.example.medix.presentation.ui.navigation
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.medix.core.auth.SessionManager
-import com.example.medix.core.network.SupabaseProvider
-import com.example.medix.data.repositories.AuthRepositoryImpl
-import com.example.medix.di.RepositoryModule
-import com.example.medix.presentation.ui.screens.ConfirmationScreen
-import com.example.medix.presentation.ui.screens.LoginScreen
-import com.example.medix.presentation.ui.screens.NotificationsScreen
-import com.example.medix.presentation.ui.screens.ProfileScreen
-import com.example.medix.presentation.ui.screens.RecordsScreen
-import com.example.medix.presentation.ui.screens.RegisterStep1
-import com.example.medix.presentation.ui.screens.RegisterStep2
-import com.example.medix.presentation.ui.screens.RegisterStep3
-import com.example.medix.presentation.ui.screens.ScheduleScreen
-import com.example.medix.presentation.ui.screens.VoiceScreen
+import androidx.compose.runtime.*
+import androidx.navigation.compose.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.medix.presentation.ui.screens.*
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
-import com.example.medix.presentation.viewmodels.auth.AuthViewModelFactory
+import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
-import com.example.medix.presentation.viewmodels.voice.VoiceViewModelFactory
-import com.example.medix.services.AudioPlayer
-import com.example.medix.services.AudioRecorder
 
 @Composable
 fun NavGraph() {
+
     val navController = rememberNavController()
-    val context = LocalContext.current
-    val sessionState by SessionManager.sessionState.collectAsState()
-    val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val navViewModel: NavViewModel = hiltViewModel()
 
-    val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(
-            authRepository = AuthRepositoryImpl(SupabaseProvider.createClientOrNull()),
-            pacienteRepository = RepositoryModule.providePacienteRepository(),
-        )
-    )
+    val sessionState by navViewModel.sessionState.collectAsState()
 
-    LaunchedEffect(sessionState.isLoggedIn, currentRoute) {
-        val route = currentRoute ?: return@LaunchedEffect
-        val authRoutes = setOf("login", "register1", "register2", "register3")
-        val protectedRoutes = setOf("schedule", "voice", "confirmation", "notifications", "records", "profile")
-
-        when {
-            !sessionState.isLoggedIn && route in protectedRoutes -> {
-                navController.navigate("login") {
-                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-            sessionState.isLoggedIn && route in authRoutes -> {
-                navController.navigate("schedule") {
-                    popUpTo("login") { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-        }
+    if (sessionState.isLoading) {
+        SplashScreen()
+        return
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = if (sessionState.isLoggedIn) "schedule" else "login"
-    ) {
-        composable("login") {
-            LoginScreen(
-                viewModel = authViewModel,
-                onLoginSuccess = {
-                    navController.navigate("schedule") {
-                        popUpTo("login") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onNavigateToRegister = {
-                    navController.navigate("register1") {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
+    val startDestination = if (sessionState.isLoggedIn) {
+        Screen.Schedule.route
+    } else {
+        Screen.Login.route
+    }
 
-        composable("register1") {
-            RegisterStep1(
-                viewModel = authViewModel,
-                onNext = { navController.navigate("register2") },
-            )
-        }
+    key(sessionState.isLoggedIn) {
 
-        composable("register2") {
-            RegisterStep2(
-                viewModel = authViewModel,
-                onNext = { navController.navigate("register3") },
-                onBack = { navController.popBackStack() },
-            )
-        }
+        NavHost(
+            navController = navController,
+            startDestination = startDestination
+        ) {
 
-        composable("register3") {
-            RegisterStep3(
-                viewModel = authViewModel,
-                onRegistrationSuccess = {
-                    navController.navigate("schedule") {
-                        popUpTo("login") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onBack = { navController.popBackStack() },
-            )
-        }
+            // =====================
+            // AUTH
+            // =====================
 
-        composable("schedule") {
-            if (sessionState.isLoggedIn) {
-                ScheduleScreen(
-                    currentRoute = "schedule",
-                    onNotificationsClick = { navController.navigate("notifications") },
-                    onStartVoice = { navController.navigate("voice") },
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo("schedule")
-                            launchSingleTop = true
-                        }
+            composable(Screen.Login.route) {
+                LoginScreen(
+                    viewModel = authViewModel,
+                    onLoginSuccess = {
+                        navController.navigateAndClear(Screen.Schedule.route)
+                    },
+                    onNavigateToRegister = {
+                        navController.navigateSingleTop(Screen.Register1.route)
                     }
                 )
             }
-        }
 
-        composable("voice") {
-            if (sessionState.isLoggedIn) {
-                val repository = remember { RepositoryModule.provideVoiceRepository() }
-
-                val viewModel: VoiceViewModel = viewModel(
-                    factory = VoiceViewModelFactory(
-                        repository = repository,
-                        recorder = AudioRecorder(context),
-                        player = AudioPlayer(context),
-                        context = context
-                    )
+            composable(Screen.Register1.route) {
+                RegisterStep1(
+                    viewModel = authViewModel,
+                    onNext = {
+                        navController.navigateSingleTop(Screen.Register2.route)
+                    },
+                    onBack = {
+                        authViewModel.resetPacienteForm()
+                        navController.popBackStack()
+                    }
                 )
+            }
+
+            composable(Screen.Register2.route) {
+                RegisterStep2(
+                    viewModel = authViewModel,
+                    onNext = {
+                        navController.navigateSingleTop(Screen.Register3.route)
+                    },
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Screen.Register3.route) {
+                RegisterStep3(
+                    viewModel = authViewModel,
+                    onRegistrationSuccess = {
+                        navController.navigateAndClear(Screen.Schedule.route)
+                    },
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // =====================
+            // MAIN
+            // =====================
+
+            composable(Screen.Schedule.route) {
+                ScheduleScreen(
+                    currentRoute = Screen.Schedule.route,
+                    onNotificationsClick = {
+                        navController.navigateSingleTop(Screen.Notifications.route)
+                    },
+                    onStartVoice = {
+                        navController.navigateSingleTop(Screen.Voice.route)
+                    },
+                    onNavigate = { route ->
+                        navController.navigateSingleTop(route)
+                    }
+                )
+            }
+
+            composable(Screen.Voice.route) {
+                val viewModel: VoiceViewModel = hiltViewModel()
 
                 VoiceScreen(
                     viewModel = viewModel,
                     onEndCall = {
                         if (viewModel.uiState.value.completed == true) {
-                            navController.navigate("confirmation") {
-                                popUpTo("confirmation") { inclusive = true }
-                            }
+                            navController.navigateAndClear(Screen.Confirmation.route)
                         } else {
-                            navController.navigate("schedule") {
-                                popUpTo("schedule") { inclusive = true }
-                            }
+                            navController.navigateAndClear(Screen.Schedule.route)
                         }
                     }
                 )
             }
-        }
-        composable("confirmation") {
-            if (sessionState.isLoggedIn) {
+
+            composable(Screen.Confirmation.route) {
                 ConfirmationScreen(
                     onDone = {
-                        navController.navigate("schedule") {
-                            popUpTo("schedule") { inclusive = true }
-                        }
+                        navController.navigateAndClear(Screen.Schedule.route)
                     }
                 )
             }
-        }
 
-        composable("notifications") {
-            if (sessionState.isLoggedIn) {
+            composable(Screen.Notifications.route) {
                 NotificationsScreen(
-                    currentRoute = "notifications",
+                    currentRoute = Screen.Notifications.route,
                     onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo("notifications")
-                            launchSingleTop = true
-                        }
+                        navController.navigateSingleTop(route)
                     }
                 )
             }
-        }
 
-        composable("records") {
-            if (sessionState.isLoggedIn) {
+            composable(Screen.Records.route) {
                 RecordsScreen(
-                    currentRoute = "records",
-                    onNotificationsClick = { navController.navigate("notifications") },
+                    currentRoute = Screen.Records.route,
+                    onNotificationsClick = {
+                        navController.navigateSingleTop(Screen.Notifications.route)
+                    },
                     onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo("records")
-                            launchSingleTop = true
-                        }
+                        navController.navigateSingleTop(route)
                     }
                 )
             }
-        }
 
-        composable("profile") {
-            if (sessionState.isLoggedIn) {
+            composable(Screen.Profile.route) {
+
+                val profileViewModel: ProfileViewModel = hiltViewModel()
+
                 ProfileScreen(
-                    currentRoute = "profile",
+                    currentRoute = Screen.Profile.route,
                     onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo("profile")
-                            launchSingleTop = true
-                        }
+                        navController.navigateSingleTop(route)
+                    },
+                    onLogout = {
+                        profileViewModel.logout()
+                        authViewModel.resetAuthState()
+                        navController.navigateAndClear(Screen.Login.route)
                     }
                 )
             }

@@ -1,49 +1,65 @@
 package com.example.medix.presentation.viewmodels.schedule
 
-import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.medix.presentation.ui.state.UiState
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.domain.entities.Appointment
 import com.example.medix.domain.repositories.AppointmentRepository
+import com.example.medix.presentation.ui.state.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import javax.inject.Inject
 
-class AppointmentViewModel(
-    private val repository: AppointmentRepository
+@HiltViewModel
+class AppointmentViewModel @Inject constructor(
+    private val repository: AppointmentRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
-    var uiState by mutableStateOf<UiState<List<Appointment>>>(UiState.Loading)
-        private set
+    private val _uiState =
+        MutableStateFlow<UiState<List<Appointment>>>(UiState.Loading)
+    val uiState: StateFlow<UiState<List<Appointment>>> = _uiState.asStateFlow()
+
+
 
     init {
-        loadAppointments()
+        viewModelScope.launch {
+            sessionManager.sessionFlow
+                .map { it.pacienteId }
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collectLatest {
+                    loadAppointments()
+                }
+        }
     }
 
     fun loadAppointments() {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
 
-            uiState = UiState.Loading
-
-            try {
-                val data = repository.getAppointments()
-                uiState = UiState.Success(data)
-
-            } catch (e: Exception) {
-                uiState = UiState.Error("Error al cargar las citas")
+            runCatching {
+                repository.getAppointments()
+            }.onSuccess { data ->
+                _uiState.value = UiState.Success(data)
+            }.onFailure {
+                _uiState.value = UiState.Error("Error al cargar las citas")
             }
         }
     }
 
-
     val upcomingAppointments: List<Appointment>
-        get() = (uiState as? UiState.Success)?.data
+        get() = (_uiState.value as? UiState.Success)
+            ?.data
             ?.filter { LocalDateTime.parse(it.date).isAfter(LocalDateTime.now()) }
             ?.sortedBy { LocalDateTime.parse(it.date) }
             ?: emptyList()
 
     val pastAppointments: List<Appointment>
-        get() = (uiState as? UiState.Success)?.data
+        get() = (_uiState.value as? UiState.Success)
+            ?.data
             ?.filter { LocalDateTime.parse(it.date).isBefore(LocalDateTime.now()) }
             ?.sortedByDescending { LocalDateTime.parse(it.date) }
             ?: emptyList()

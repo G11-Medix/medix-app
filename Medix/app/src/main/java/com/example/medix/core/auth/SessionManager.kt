@@ -1,52 +1,62 @@
 package com.example.medix.core.auth
 
-import android.content.Context
-import android.content.SharedPreferences
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object SessionManager {
-    private const val PREFS_NAME = "medix_session"
-    private const val KEY_TOKEN = "token"
+@Singleton
+class SessionManager @Inject constructor(
+    private val dataStore: DataStore<Preferences>
+) {
 
-    private var prefs: SharedPreferences? = null
-    private val _sessionState = MutableStateFlow(AuthSessionState())
-    val sessionState: StateFlow<AuthSessionState> = _sessionState.asStateFlow()
+    private object Keys {
+        val TOKEN = stringPreferencesKey("token")
+        val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
+        val PACIENTE_ID = longPreferencesKey("paciente_id")
+    }
 
-    fun initialize(context: Context) {
-        if (prefs != null) return
 
-        prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val storedToken = prefs?.getString(KEY_TOKEN, null)
-
-        _sessionState.value = AuthSessionState(
-            token = storedToken,
+    val sessionFlow: Flow<AuthSessionState> = dataStore.data.map { prefs ->
+        AuthSessionState(
+            token = prefs[Keys.TOKEN],
+            refreshToken = prefs[Keys.REFRESH_TOKEN],
+            pacienteId = prefs[Keys.PACIENTE_ID]
         )
     }
 
-    fun saveSession(token: String) {
-        _sessionState.value = AuthSessionState(
-            token = token,
-        )
 
-        prefs?.edit()
-            ?.putString(KEY_TOKEN, token)
-            ?.apply()
+    suspend fun saveSession(
+        token: String,
+        refreshToken: String?,
+        pacienteId: Long?
+    ) {
+        dataStore.edit { prefs ->
+            prefs[Keys.TOKEN] = token
+            if (refreshToken != null) prefs[Keys.REFRESH_TOKEN] = refreshToken
+            if (pacienteId != null) prefs[Keys.PACIENTE_ID] = pacienteId
+        }
     }
 
-    fun clearSession() {
-        _sessionState.value = AuthSessionState()
-        prefs?.edit()
-            ?.remove(KEY_TOKEN)
-            ?.apply()
+
+    suspend fun clearSession() {
+        dataStore.edit { it.clear() }
     }
 
-    fun isLoggedIn(): Boolean = _sessionState.value.isLoggedIn
 
-    fun getToken(): String? = _sessionState.value.token
+    suspend fun getToken(): String? {
+        return dataStore.data.map { it[Keys.TOKEN] }.firstOrNull()
+    }
 
-    fun requireToken(): String {
-        return getToken() ?: error("No hay un token de sesion disponible.")
+    suspend fun getPacienteId(): Long? {
+        return dataStore.data.map { it[Keys.PACIENTE_ID] }.firstOrNull()
+    }
+
+    suspend fun requirePacienteId(): Long {
+        return getPacienteId()
+            ?: throw IllegalStateException("Paciente ID no disponible")
     }
 }

@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -17,6 +20,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,8 +31,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.medix.presentation.ui.components.register.CustomTextField
+import com.example.medix.presentation.ui.components.register.EpsDropdown
+import com.example.medix.presentation.ui.components.register.StepProgressBar
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
 
 @Composable
@@ -39,120 +49,84 @@ fun RegisterStep2(
 ) {
     val state by viewModel.uiState.collectAsState()
     val form = state.pacienteForm
-    var expanded by remember { mutableStateOf(false) }
+
+    val config = LocalConfiguration.current
+    val isTablet = config.screenWidthDp > 600
 
     LaunchedEffect(Unit) {
         viewModel.loadEpsIfNeeded()
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.Default.ArrowBack, contentDescription = null)
-        }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-        Text("Crear Cuenta - Paso 2 de 3")
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = if (isTablet) 500.dp else Dp.Unspecified)
+        ) {
 
-        Spacer(Modifier.height(8.dp))
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+            }
 
-        LinearProgressIndicator(progress = 0.66f, modifier = Modifier.fillMaxWidth())
+            Text("Paso 2 de 3", style = MaterialTheme.typography.titleLarge)
 
-        Spacer(Modifier.height(24.dp))
+            StepProgressBar(currentStep = 2, totalSteps = 3)
 
-        OutlinedTextField(
-            value = form.telefono,
-            onValueChange = { input ->
-                val normalizedInput = when {
-                    input.isBlank() -> ""
-                    input.startsWith("+") -> input
-                    else -> "+$input"
+            Spacer(Modifier.height(16.dp))
+
+            CustomTextField(
+                value = form.telefono,
+                label = "Teléfono",
+                onChange = { input ->
+                    val normalized = if (input.startsWith("+")) input else "+$input"
+                    viewModel.updatePhone(normalized)
                 }
-                viewModel.updatePhone(normalizedInput)
-            },
-            label = { Text("Teléfono") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
+            )
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = form.correo,
-            onValueChange = {
-                viewModel.updatePacienteForm { current -> current.copy(correo = it) }
-            },
-            label = { Text("Correo") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        OutlinedTextField(
-            value = form.epsNombre,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("EPS") },
-            placeholder = { Text("Selecciona una EPS") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Box {
-            Button(
-                onClick = { expanded = true },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = state.epsOptions.isNotEmpty() && !state.isLoadingEps
-            ) {
-                Text(
-                    when {
-                        state.isLoadingEps -> "Cargando EPS..."
-                        state.epsOptions.isEmpty() -> "Sin EPS disponibles"
-                        else -> "Seleccionar EPS"
+            CustomTextField(
+                value = form.correo,
+                label = "Correo",
+                onChange = { newValue ->
+                    viewModel.updatePacienteForm {
+                        it.copy(correo = newValue)
                     }
-                )
-            }
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                state.epsOptions.forEach { eps ->
-                    DropdownMenuItem(
-                        text = { Text(eps.nombre) },
-                        onClick = {
-                            viewModel.updatePacienteForm { current ->
-                                current.copy(
-                                    idEps = eps.idEps.toString(),
-                                    epsNombre = eps.nombre,
-                                )
-                            }
-                            expanded = false
-                        }
-                    )
                 }
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            EpsDropdown(
+                selected = form.epsNombre,
+                options = state.epsOptions,
+                isLoading = state.isLoadingEps,
+                onSelected = { eps ->
+                    viewModel.updatePacienteForm {
+                        it.copy(
+                            idEps = eps.idEps.toString(),
+                            epsNombre = eps.nombre
+                        )
+                    }
+                }
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) {
+                Text("Siguiente")
             }
-        }
 
-        if (state.isLoadingEps) {
-            Spacer(Modifier.height(12.dp))
-            CircularProgressIndicator()
-        }
-
-        state.errorMessage?.let { error ->
-            Spacer(Modifier.height(12.dp))
-            Text(error)
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) {
-            Text("Siguiente")
-        }
-
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-            Text("Atrás")
+            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                Text("Atrás")
+            }
         }
     }
 }

@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -29,47 +31,49 @@ fun VoiceCard(
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1565C0)
+            containerColor = MaterialTheme.colorScheme.primary
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp)
+            .heightIn(min = 140.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(64.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF1E88E5))
-                    .clickable { onMicClick() },
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clickable { onMicClick() }
+                    .semantics {
+                        contentDescription = "Iniciar asistente de voz"
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
-                    contentDescription = "Start voice",
-                    tint = Color.White
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Empezar agendamiento cita",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+                text = "Empezar agendamiento de cita",
+                color = MaterialTheme.colorScheme.onPrimary,
+                style = MaterialTheme.typography.titleMedium
             )
 
             Text(
                 text = "Asistente Medix",
-                color = Color.White.copy(alpha = 0.7f),
-                fontSize = 12.sp
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }

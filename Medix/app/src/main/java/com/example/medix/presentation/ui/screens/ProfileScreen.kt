@@ -1,145 +1,132 @@
 package com.example.medix.presentation.ui.screens
+
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+
 import com.example.medix.core.auth.SessionManager
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.SectionTitle
 import com.example.medix.presentation.ui.components.profile.InfoCard
-import com.example.medix.presentation.ui.components.profile.InfoCardWithButton
-import com.example.medix.presentation.ui.components.profile.InfoCardWithStatus
 import com.example.medix.presentation.ui.components.profile.TopBarProfile
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
-import com.example.medix.presentation.viewmodels.profile.ProfileViewModelFactory
+import com.example.medix.data.dto.UserProfileDto
+import com.example.medix.presentation.ui.components.profile.ProfileHeader
+import com.example.medix.presentation.ui.components.profile.ProfileInfo
 
 @Composable
 fun ProfileScreen(
     currentRoute: String,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
 
-    val viewModel: ProfileViewModel = viewModel(
-        factory = ProfileViewModelFactory()
-    )
+    val viewModel: ProfileViewModel = hiltViewModel()
+    val state by viewModel.uiState.collectAsState()
 
-    val state = viewModel.uiState
-    val onLogout = { SessionManager.clearSession() }
+    val configuration = LocalConfiguration.current
+    val isLandscape =
+        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F7FA))
-            .statusBarsPadding()
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background)
     ) {
 
-        TopBarProfile(onLogout = onLogout)
-
-
-        Box(
+        Column(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
+                .padding(bottom = 80.dp)
         ) {
+
+            TopBarProfile(
+                onLogout = onLogout
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             when (state) {
 
-
                 is UiState.Loading -> {
                     Box(
-                        Modifier.fillMaxSize(),
+                        Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
                     }
                 }
 
-
                 is UiState.Error -> {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                    val error = state as UiState.Error
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = error.message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
 
-                            Text(text = state.message, color = Color.Red)
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Button(onClick = { viewModel.loadProfile() }) {
-                                Text("Reintentar")
-                            }
+                        Button(
+                            onClick = { viewModel.loadProfile() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Reintentar")
                         }
                     }
                 }
 
+                is UiState.Success<*> -> {
 
-                is UiState.Success -> {
+                    val profile =
+                        (state as UiState.Success<*>).data as? UserProfileDto
+                            ?: return@Column
 
-                    val profile = state.data
+                    if (isLandscape) {
 
-                    Column {
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
 
-                            Text(
-                                text = "${profile.nombres} ${profile.apellidos}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
+                            ProfileHeader(profile, Modifier.weight(1f))
 
-                            Text(
-                                text = "Paciente Medix",
-                                color = Color.Gray,
-                                fontSize = 12.sp
-                            )
+                            ProfileInfo(profile, Modifier.weight(1f))
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    } else {
 
-                        SectionTitle("Información Personal")
-
-                        InfoCard(Icons.Default.Person, "Nombres", profile.nombres)
-                        InfoCard(Icons.Default.Badge, "Apellidos", profile.apellidos)
-                        InfoCard(Icons.Default.Fingerprint, "Documento", profile.documento)
-                        InfoCard(Icons.Default.LocalHospital, "EPS", profile.eps)
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        SectionTitle("Contacto y Seguridad")
-
-                        InfoCardWithStatus(
-                            icon = Icons.Default.Email,
-                            title = "Correo",
-                            value = profile.correo,
-                            status = if (profile.correoVerificado) "Verified" else "Not verified"
-                        )
-
-                        InfoCardWithButton(
-                            icon = Icons.Default.Phone,
-                            title = "Telefono",
-                            value = profile.telefono,
-                            buttonText = if (profile.telefonoVerificado) "Verified" else "Verify"
-                        )
+                        Column {
+                            ProfileHeader(profile)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            ProfileInfo(profile)
+                        }
                     }
                 }
             }
@@ -148,7 +135,10 @@ fun ProfileScreen(
 
         BottomNavigationBar(
             currentRoute = currentRoute,
-            onNavigate = onNavigate
+            onNavigate = onNavigate,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
         )
     }
 }

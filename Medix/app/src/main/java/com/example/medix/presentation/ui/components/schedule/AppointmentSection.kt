@@ -6,6 +6,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.example.medix.core.utils.DateUtils
@@ -17,22 +19,21 @@ fun AppointmentSection(
     appointments: List<Appointment>,
     onSeeAllClick: () -> Unit
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Próximas Citas",
-            fontWeight = FontWeight.Bold
+            text = "Próximas citas",
+            style = MaterialTheme.typography.titleMedium
         )
 
         Text(
             text = "Ver todas",
-            color = Color(0xFF1E88E5),
-            modifier = Modifier.clickable {
-                onSeeAllClick()
-            }
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable { onSeeAllClick() }
+                .semantics { contentDescription = "Ver todas las citas" }
         )
     }
 
@@ -41,17 +42,18 @@ fun AppointmentSection(
     if (appointments.isEmpty()) {
         Text(
             text = "No tienes citas próximas",
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     } else {
-        appointments.forEach { appointment ->
-            AppointmentCard(
-                name = appointment.name,
-                specialty = appointment.specialty,
-                date = DateUtils.formatAppointmentDate(appointment.date)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
+        Column {
+            appointments.forEach {
+                AppointmentCard(
+                    name = it.name,
+                    specialty = it.specialty,
+                    date = DateUtils.formatAppointmentDate(it.date)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
 }

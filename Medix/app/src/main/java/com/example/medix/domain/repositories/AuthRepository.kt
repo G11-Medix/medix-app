@@ -15,4 +15,8 @@ interface AuthRepository {
     fun currentAccessToken(): String?
 
     fun currentUserId(): String?
+
+    fun currentRefreshToken(): String?
+
+    fun clearSessionBlocking()
 }
