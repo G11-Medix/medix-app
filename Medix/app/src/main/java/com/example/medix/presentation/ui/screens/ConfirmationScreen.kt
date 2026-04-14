@@ -2,7 +2,9 @@ package com.example.medix.presentation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 
 import androidx.compose.material3.*
 
@@ -12,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -22,39 +25,48 @@ import com.example.medix.presentation.ui.components.confirmation.TopBarConfirmat
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.confirmation.ConfirmationViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import android.content.res.Configuration
+import com.example.medix.presentation.ui.components.confirmation.MapSection
+
 @Composable
 fun ConfirmationScreen(
     onDone: () -> Unit
 ) {
-
     val viewModel: ConfirmationViewModel = hiltViewModel()
-
     val state = viewModel.uiState
+
+    val configuration = LocalConfiguration.current
+    val isLandscape =
+        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     LaunchedEffect(Unit) {
         viewModel.loadData()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F7FA))
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter
     ) {
 
-        TopBarConfirmation()
-
-        Box(
+        Column(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
+                .widthIn(max = 600.dp)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+
+            TopBarConfirmation()
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             when (state) {
 
                 is UiState.Loading -> {
                     Box(
-                        Modifier.fillMaxSize(),
+                        Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
@@ -63,81 +75,97 @@ fun ConfirmationScreen(
 
                 is UiState.Error -> {
                     Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
                         Text(
                             text = state.message,
-                            color = Color.Red
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Button(onClick = { viewModel.loadData() }) {
+                        Button(
+                            onClick = { viewModel.loadData() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text("Reintentar")
                         }
                     }
                 }
 
                 is UiState.Success -> {
-
                     val data = state.data
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    if (isLandscape) {
 
-                        SuccessHeader(
-                            title = data.title,
-                            message = data.message,
-                            status = data.status
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        AppointmentInfoCard(data)
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            elevation = CardDefaults.cardElevation(6.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Box(
-                                modifier = Modifier.padding(8.dp)
+
+                            Column(
+                                modifier = Modifier.weight(1f)
                             ) {
-                                OpenStreetMapView(
-                                    lat = data.lat,
-                                    lon = data.lon
+                                SuccessHeader(
+                                    title = data.title,
+                                    message = data.message,
+                                    status = data.status
                                 )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                AppointmentInfoCard(data)
                             }
+
+                            MapSection(data)
+
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    } else {
 
-                        Text(
-                            text = "Un email de confirmación se envió con los detalles",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+                            SuccessHeader(
+                                title = data.title,
+                                message = data.message,
+                                status = data.status
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            AppointmentInfoCard(data)
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            MapSection(data)
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Un email de confirmación se envió con los detalles",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
-        }
 
-        Button(
-            onClick = onDone,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("Finalizar")
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onDone,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .minimumInteractiveComponentSize(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("Finalizar")
+            }
         }
     }
 }

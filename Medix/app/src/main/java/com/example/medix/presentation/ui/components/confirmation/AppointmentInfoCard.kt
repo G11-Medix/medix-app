@@ -23,29 +23,41 @@ fun AppointmentInfoCard(data: AppointmentConfirmationDto) {
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F3F6)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
         modifier = Modifier.fillMaxWidth()
     ) {
+
         Column(modifier = Modifier.padding(16.dp)) {
 
-            Text(data.doctorName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(
+                data.doctorName,
+                style = MaterialTheme.typography.titleMedium
+            )
 
             Text(
                 DateUtils.formatAppointmentDate(data.date),
-                color = Color(0xFF1565C0),
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.LocationOn, contentDescription = null)
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = "Ubicación de la clínica"
+                )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(data.clinicName)
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.DateRange, contentDescription = null)
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = "Dirección de la cita"
+                )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(data.address)
             }

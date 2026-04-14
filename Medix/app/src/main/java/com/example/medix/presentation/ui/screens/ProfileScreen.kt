@@ -1,7 +1,10 @@
 package com.example.medix.presentation.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -9,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +26,8 @@ import com.example.medix.presentation.ui.components.profile.TopBarProfile
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
 import com.example.medix.data.dto.UserProfileDto
+import com.example.medix.presentation.ui.components.profile.ProfileHeader
+import com.example.medix.presentation.ui.components.profile.ProfileInfo
 
 @Composable
 fun ProfileScreen(
@@ -30,40 +36,41 @@ fun ProfileScreen(
 ) {
 
     val viewModel: ProfileViewModel = hiltViewModel()
-
     val state by viewModel.uiState.collectAsState()
 
-
+    val configuration = LocalConfiguration.current
+    val isLandscape =
+        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F7FA))
-            .statusBarsPadding()
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background)
     ) {
 
-        TopBarProfile(
-            onLogout = {
-                viewModel.logout()
-            }
-        )
-
-        Box(
+        Column(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
+                .padding(bottom = 80.dp)
         ) {
+
+            TopBarProfile(
+                onLogout = { viewModel.logout() }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             when (state) {
 
                 is UiState.Loading -> {
                     Box(
-                        Modifier.fillMaxSize(),
+                        Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
@@ -73,72 +80,64 @@ fun ProfileScreen(
                 is UiState.Error -> {
                     val error = state as UiState.Error
 
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = error.message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
 
-                            Text(text = error.message, color = Color.Red)
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Button(onClick = { viewModel.loadProfile() }) {
-                                Text("Reintentar")
-                            }
+                        Button(
+                            onClick = { viewModel.loadProfile() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Reintentar")
                         }
                     }
                 }
 
                 is UiState.Success<*> -> {
 
-                    val profile = (state as UiState.Success<*>).data as? UserProfileDto
+                    val profile =
+                        (state as UiState.Success<*>).data as? UserProfileDto
+                            ?: return@Column
 
-                    if (profile == null) return@Box
+                    if (isLandscape) {
 
-                    Column {
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
 
-                            Text(
-                                text = "${profile.nombres} ${profile.apellidos}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
+                            ProfileHeader(profile, Modifier.weight(1f))
 
-                            Text(
-                                text = "Paciente Medix",
-                                color = Color.Gray,
-                                fontSize = 12.sp
-                            )
+                            ProfileInfo(profile, Modifier.weight(1f))
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    } else {
 
-                        SectionTitle("Información Personal")
-
-                        InfoCard(Icons.Default.Person, "Nombres", profile.nombres)
-                        InfoCard(Icons.Default.Badge, "Apellidos", profile.apellidos)
-                        InfoCard(Icons.Default.Fingerprint, "Documento", profile.documento)
-                        InfoCard(Icons.Default.LocalHospital, "EPS", profile.eps)
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        SectionTitle("Contacto y Seguridad")
-
-                        InfoCard(Icons.Default.Email, "Correo", profile.correo)
-                        InfoCard(Icons.Default.Phone, "Telefono", profile.telefono)
+                        Column {
+                            ProfileHeader(profile)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            ProfileInfo(profile)
+                        }
                     }
                 }
             }
         }
 
+
         BottomNavigationBar(
             currentRoute = currentRoute,
-            onNavigate = onNavigate
+            onNavigate = onNavigate,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
         )
     }
 }

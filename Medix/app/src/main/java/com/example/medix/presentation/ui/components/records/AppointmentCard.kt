@@ -24,45 +24,55 @@ fun AppointmentCard(
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
+
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier
+                .padding(12.dp)
+                .minimumInteractiveComponentSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             Box(
                 modifier = Modifier
                     .size(50.dp)
-                    .background(Color.LightGray, CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        CircleShape
+                    )
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
 
-                Text(name, fontWeight = FontWeight.Bold)
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 Text(
                     specialty,
-                    fontSize = 12.sp,
-                    color = Color.Gray
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+
                     Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = null,
-                        tint = Color(0xFF1E88E5),
-                        modifier = Modifier.size(16.dp)
+                        Icons.Default.DateRange,
+                        contentDescription = "Fecha de la cita"
                     )
 
                     Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
                         date,
-                        color = Color(0xFF1E88E5),
-                        fontSize = 12.sp
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

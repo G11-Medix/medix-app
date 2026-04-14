@@ -1,15 +1,12 @@
 package com.example.medix.presentation.ui.components.voice
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material3.*
-
-import androidx.compose.runtime.*
-
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,38 +19,37 @@ import com.example.medix.presentation.viewmodels.status.ConversationStatus
 fun ActiveSessionHeader(status: ConversationStatus) {
 
     val (color, title) = when (status) {
-        ConversationStatus.LISTENING -> Color.Green to "Escuchando..."
-        ConversationStatus.RESPONDING -> Color(0xFF1E88E5) to "Hablando..."
-        ConversationStatus.PROCESSING -> Color(0xFFFFA000) to "Procesando..."
-        ConversationStatus.ERROR -> Color.Red to "Error"
-        else -> Color.Gray to "Conectando..."
+        ConversationStatus.LISTENING -> Color(0xFF2E7D32) to "Escuchando"
+        ConversationStatus.RESPONDING -> Color(0xFF1565C0) to "Hablando"
+        ConversationStatus.PROCESSING -> Color(0xFFF9A825) to "Procesando"
+        ConversationStatus.ERROR -> Color(0xFFC62828) to "Error"
+        else -> Color.Gray to "Conectando"
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         Text(
             text = "Sesión activa",
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             color = Color.Gray
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Box(
             modifier = Modifier
-                .size(120.dp)
-                .background(Color.White, CircleShape),
+                .size(110.dp),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.HealthAndSafety,
-                contentDescription = null,
+                contentDescription = "Estado del asistente",
                 tint = Color(0xFF1565C0),
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(42.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = title,
@@ -61,11 +57,13 @@ fun ActiveSessionHeader(status: ConversationStatus) {
             fontSize = 20.sp
         )
 
+        Spacer(modifier = Modifier.height(6.dp))
+
         Row(verticalAlignment = Alignment.CenterVertically) {
 
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(10.dp)
                     .background(color, CircleShape)
             )
 
@@ -73,7 +71,7 @@ fun ActiveSessionHeader(status: ConversationStatus) {
 
             Text(
                 text = "Asistente de voz activo",
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 color = Color.Gray
             )
         }

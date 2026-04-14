@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.ZoneId
@@ -25,30 +27,31 @@ fun DatePickerField(
 
     val datePickerState = rememberDatePickerState()
 
-
     val formatter = remember {
         DateTimeFormatter.ofPattern("dd/MM/yyyy")
     }
 
-    Box(
+    OutlinedTextField(
+        value = selectedDate,
+        onValueChange = {},
+        readOnly = true,
+        label = { Text("Fecha de nacimiento") },
+        placeholder = { Text("Selecciona una fecha") },
         modifier = Modifier
             .fillMaxWidth()
             .clickable { showDialog = true }
-    ) {
-        OutlinedTextField(
-            value = selectedDate,
-            onValueChange = {},
-            readOnly = true,
-            enabled = false,
-            label = { Text("Fecha de Nacimiento") },
-            placeholder = { Text("Selecciona una fecha") },
-            trailingIcon = {
-                Icon(Icons.Default.DateRange, contentDescription = null)
+            .semantics {
+                contentDescription = "Campo de fecha de nacimiento. Toca dos veces para seleccionar una fecha"
             },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-    }
+        trailingIcon = {
+            Icon(
+                Icons.Default.DateRange,
+                contentDescription = "Abrir selector de fecha"
+            )
+        },
+        shape = RoundedCornerShape(12.dp),
+        singleLine = true
+    )
 
     if (showDialog) {
         DatePickerDialog(
@@ -62,7 +65,6 @@ fun DatePickerField(
                                 .toLocalDate()
 
                             val formattedDate = localDate.format(formatter)
-
                             onDateSelected(formattedDate)
                         }
                         showDialog = false
@@ -77,9 +79,7 @@ fun DatePickerField(
                 }
             }
         ) {
-            DatePicker(
-                state = datePickerState
-            )
+            DatePicker(state = datePickerState)
         }
     }
 }

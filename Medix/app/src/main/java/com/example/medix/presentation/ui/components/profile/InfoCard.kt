@@ -21,23 +21,39 @@ fun InfoCard(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F3F6)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
     ) {
+
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier
+                .padding(12.dp)
+                .minimumInteractiveComponentSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            Icon(icon, contentDescription = null)
+            Icon(
+                icon,
+                contentDescription = title
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(title, fontSize = 10.sp, color = Color.Gray)
-                Text(value, fontWeight = FontWeight.Bold)
+                Text(
+                    title,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Text(
+                    value,
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
         }
     }

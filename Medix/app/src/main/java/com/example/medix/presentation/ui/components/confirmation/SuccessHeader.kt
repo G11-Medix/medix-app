@@ -14,15 +14,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 
-data class Quad<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D
+data class StatusUI(
+    val bgColor: Color,
+    val iconColor: Color,
+    val textColor: Color,
+    val icon: ImageVector,
+    val description: String
 )
 
 @Composable
@@ -31,34 +33,27 @@ fun SuccessHeader(
     message: String,
     status: String
 ) {
-    val (bgColor, iconColor, textColor, icon) = when (status) {
-
-        "SUCCESS" -> Quad(
-            Color(0xFFC8E6C9),
-            Color(0xFF2E7D32),
-            Color(0xFF1565C0),
-            Icons.Default.Check
+    val (bgColor, iconColor, textColor, icon, desc) = when (status) {
+        "SUCCESS" -> StatusUI(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primary,
+            Icons.Default.Check,
+            "Confirmación exitosa"
         )
-
-        "PENDING" -> Quad(
-            Color(0xFFFFF9C4),
-            Color(0xFFF9A825),
-            Color(0xFFF9A825),
-            Icons.Default.Schedule
+        "PENDING" -> StatusUI(
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.secondary,
+            MaterialTheme.colorScheme.secondary,
+            Icons.Default.Schedule,
+            "Confirmación pendiente"
         )
-
-        "CANCELLED" -> Quad(
-            Color(0xFFFFCDD2),
-            Color(0xFFC62828),
-            Color(0xFFC62828),
-            Icons.Default.Close
-        )
-
-        else -> Quad(
-            Color.LightGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Icons.Default.Info
+        else -> StatusUI(
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.error,
+            MaterialTheme.colorScheme.error,
+            Icons.Default.Close,
+            "Confirmación cancelada"
         )
     }
 
@@ -66,15 +61,15 @@ fun SuccessHeader(
 
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(80.dp)
                 .background(bgColor, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = desc,
                 tint = iconColor,
-                modifier = Modifier.size(50.dp)
+                modifier = Modifier.size(40.dp)
             )
         }
 
@@ -82,11 +77,14 @@ fun SuccessHeader(
 
         Text(
             text = title,
-            color = textColor,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleMedium,
+            color = textColor
         )
 
-        Text(text = message)
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

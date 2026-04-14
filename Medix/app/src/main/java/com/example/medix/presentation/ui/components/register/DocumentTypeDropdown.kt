@@ -15,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 
@@ -35,11 +37,16 @@ fun DocumentTypeDropdown(
             value = selected,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Tipo de Documento") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            label = { Text("Tipo de documento") },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .semantics {
+                    contentDescription = "Selector de tipo de documento"
+                },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+            },
             shape = RoundedCornerShape(12.dp)
         )
 

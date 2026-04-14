@@ -23,13 +23,14 @@ fun HeaderSection(
             text = "Medix",
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
+            maxLines = 1,
             modifier = Modifier.weight(1f)
         )
 
         IconButton(onClick = onNotificationsClick) {
             Icon(
                 imageVector = Icons.Default.Notifications,
-                contentDescription = "Notificationes"
+                contentDescription = "Notificaciones"
             )
         }
     }

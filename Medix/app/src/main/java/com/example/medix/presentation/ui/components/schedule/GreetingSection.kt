@@ -13,16 +13,14 @@ import androidx.compose.ui.text.font.FontWeight
 fun GreetingSection() {
     Column {
         Text(
-            text = "HOLA DE NUEVO",
-            color = Color(0xFF1E88E5),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
+            text = "Hola de nuevo",
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.labelLarge
         )
 
         Text(
             text = "Buenos días",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineSmall
         )
     }
 }

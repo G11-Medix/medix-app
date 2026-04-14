@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.example.medix.data.dto.EpsDto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,16 +50,25 @@ fun EpsDropdown(
             readOnly = true,
             label = { Text("EPS") },
             placeholder = { Text("Selecciona una EPS") },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+                .semantics {
+                    contentDescription = if (isLoading) {
+                        "Cargando lista de EPS"
+                    } else {
+                        "Selector de EPS"
+                    }
+                },
             trailingIcon = {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.height(20.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(20.dp)
+                    )
                 } else {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                 }
             },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
 

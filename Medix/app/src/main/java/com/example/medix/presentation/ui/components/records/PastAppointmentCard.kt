@@ -28,19 +28,25 @@ fun PastAppointmentCard(
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFE0E0E0)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
+
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier
+                .padding(12.dp)
+                .minimumInteractiveComponentSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             Box(
                 modifier = Modifier
                     .size(50.dp)
-                    .background(Color.Gray, CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.outlineVariant,
+                        CircleShape
+                    )
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -49,30 +55,27 @@ fun PastAppointmentCard(
 
                 Text(
                     name,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 Text(
                     specialty,
-                    fontSize = 12.sp,
-                    color = Color.Gray
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+
                     Icon(
                         Icons.Default.History,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.DarkGray
+                        contentDescription = "Cita pasada"
                     )
 
                     Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
                         date,
-                        color = Color.DarkGray,
-                        fontSize = 12.sp
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             }

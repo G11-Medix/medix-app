@@ -18,14 +18,14 @@ fun TopBarProfile(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+
         Text(
             text = "Mi Perfil",
-            fontWeight = FontWeight.Bold,
-            fontSize = 26.sp
+            style = MaterialTheme.typography.titleLarge
         )
 
         TextButton(onClick = onLogout) {
-            Text("Cerrar sesion")
+            Text("Cerrar sesión")
         }
     }
 }

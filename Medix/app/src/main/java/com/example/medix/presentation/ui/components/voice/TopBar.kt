@@ -1,13 +1,11 @@
 package com.example.medix.presentation.ui.components.voice
-import androidx.compose.foundation.layout.*
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-
-import androidx.compose.material3.*
-
-import androidx.compose.runtime.*
-
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
@@ -17,7 +15,7 @@ fun TopBar() {
     ) {
         Icon(
             imageVector = Icons.Default.KeyboardArrowDown,
-            contentDescription = null
+            contentDescription = "Cerrar pantalla de llamada"
         )
     }
 }
