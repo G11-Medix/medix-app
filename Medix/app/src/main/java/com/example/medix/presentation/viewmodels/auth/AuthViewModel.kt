@@ -91,6 +91,10 @@ class AuthViewModel @Inject constructor(
         sendLoginOtp(normalizedPhone, isResend = false)
     }
 
+    fun resetAuthState() {
+        _uiState.value = AuthUiState()
+    }
+
     fun resendLoginOtp() {
         val normalizedPhone = normalizePhone(_uiState.value.phone)
         if (normalizedPhone.isBlank()) {

@@ -6,6 +6,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medix.core.auth.AuthSessionState
 import com.example.medix.presentation.ui.screens.*
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
+import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 
 
@@ -195,10 +196,18 @@ fun NavGraph() {
 
         composable(Screen.Profile.route) {
             ProtectedRoute(sessionState.isLoggedIn) {
+
+                val viewModel: ProfileViewModel = hiltViewModel()
+                //val authViewModel: AuthViewModel = hiltViewModel()
                 ProfileScreen(
                     currentRoute = Screen.Profile.route,
                     onNavigate = { route ->
                         navController.navigateSingleTop(route)
+                    },
+                    onLogout = {
+                        viewModel.logout()
+                        authViewModel.resetAuthState()
+                        navController.navigateAndClear(Screen.Login.route)
                     }
                 )
             }

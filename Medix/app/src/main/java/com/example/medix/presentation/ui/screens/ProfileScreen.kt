@@ -32,7 +32,8 @@ import com.example.medix.presentation.ui.components.profile.ProfileInfo
 @Composable
 fun ProfileScreen(
     currentRoute: String,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
 
     val viewModel: ProfileViewModel = hiltViewModel()
@@ -61,7 +62,7 @@ fun ProfileScreen(
         ) {
 
             TopBarProfile(
-                onLogout = { viewModel.logout() }
+                onLogout = onLogout
             )
 
             Spacer(modifier = Modifier.height(16.dp))
