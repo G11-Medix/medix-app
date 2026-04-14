@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
+import com.example.medix.presentation.ui.components.register.StepProgressBar
 
 @Composable
 fun RegisterStep3(
@@ -62,7 +63,7 @@ fun RegisterStep3(
 
             Text("Confirmación", style = MaterialTheme.typography.titleLarge)
 
-            LinearProgressIndicator(progress = 1f)
+            StepProgressBar(currentStep = 3, totalSteps = 3)
 
             Spacer(Modifier.height(16.dp))
 

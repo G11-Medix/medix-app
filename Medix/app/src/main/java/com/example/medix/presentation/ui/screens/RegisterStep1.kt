@@ -59,7 +59,7 @@ fun RegisterStep1(
 
             Text("Registro de paciente", style = MaterialTheme.typography.titleLarge)
 
-            LinearProgressIndicator(progress = 0.33f)
+            StepProgressBar(currentStep = 1, totalSteps = 3)
 
             Spacer(Modifier.height(16.dp))
 

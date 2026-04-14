@@ -1,6 +1,7 @@
 package com.example.medix.presentation.ui.components.register
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,39 +38,48 @@ fun DatePickerField(
         readOnly = true,
         label = { Text("Fecha de nacimiento") },
         placeholder = { Text("Selecciona una fecha") },
+
+        // 🔥 ESTO ES LO IMPORTANTE PARA WCAG
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { showDialog = true }
             .semantics {
-                contentDescription = "Campo de fecha de nacimiento. Toca dos veces para seleccionar una fecha"
+                contentDescription = "Campo de fecha de nacimiento"
             },
+
         trailingIcon = {
-            Icon(
-                Icons.Default.DateRange,
-                contentDescription = "Abrir selector de fecha"
-            )
+            IconButton(onClick = { showDialog = true }) {
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = "Abrir calendario"
+                )
+            }
         },
-        shape = RoundedCornerShape(12.dp),
-        singleLine = true
+
+        // 🔥 ESTO HACE QUE TODO EL CAMPO SEA CLICKABLE
+        interactionSource = remember { MutableInteractionSource() }
+            .also { source ->
+                LaunchedEffect(source) {
+                    source.interactions.collect {
+                        showDialog = true
+                    }
+                }
+            }
     )
 
     if (showDialog) {
         DatePickerDialog(
             onDismissRequest = { showDialog = false },
             confirmButton = {
-                Button(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            val localDate = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
+                Button(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val date = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
 
-                            val formattedDate = localDate.format(formatter)
-                            onDateSelected(formattedDate)
-                        }
-                        showDialog = false
+                        onDateSelected(date.format(formatter))
                     }
-                ) {
+                    showDialog = false
+                }) {
                     Text("Aceptar")
                 }
             },

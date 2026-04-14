@@ -88,6 +88,16 @@ fun LoginCard(
                 )
             }
 
+            state.errorMessage?.let { error ->
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(

@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.medix.presentation.ui.components.register.CustomTextField
 import com.example.medix.presentation.ui.components.register.EpsDropdown
+import com.example.medix.presentation.ui.components.register.StepProgressBar
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
 
 @Composable
@@ -76,7 +77,7 @@ fun RegisterStep2(
 
             Text("Paso 2 de 3", style = MaterialTheme.typography.titleLarge)
 
-            LinearProgressIndicator(progress = 0.66f)
+            StepProgressBar(currentStep = 2, totalSteps = 3)
 
             Spacer(Modifier.height(16.dp))
 
