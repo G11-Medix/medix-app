@@ -6,8 +6,8 @@ import com.example.medix.domain.entities.Appointment
 fun AppointmentDto.toDomain(): Appointment {
     return Appointment(
         id = id,
-        name = name,
-        specialty = specialty,
-        date = date
+        name = nombre_ins,
+        specialty = especialidad,
+        date = fecha_hora_cupo
     )
 }

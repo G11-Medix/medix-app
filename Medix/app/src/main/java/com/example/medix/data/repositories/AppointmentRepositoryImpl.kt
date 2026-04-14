@@ -1,5 +1,6 @@
 package com.example.medix.data.repositories
 
+import android.util.Log
 import com.example.medix.core.auth.SessionManager
 import com.example.medix.core.network.AppointmentApi
 import com.example.medix.data.mappers.toDomain
@@ -15,7 +16,14 @@ class AppointmentRepositoryImpl @Inject constructor(
     override suspend fun getAppointments(): List<Appointment> {
         val idPaciente = sessionManager.requirePacienteId().toInt()
 
-        return api.getAppointments(idPaciente)
-            .map { it.toDomain() }
+        val response = api.getAppointments(idPaciente)
+
+        Log.d("AppointmentsRepo", "📥 Respuesta cruda API: $response")
+
+        val mapped = response.map { it.toDomain() }
+
+        Log.d("AppointmentsRepo", "✅ Resultado mapeado: $mapped")
+
+        return mapped
     }
 }
