@@ -151,8 +151,15 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideLegalApi(@Named("dataRetrofit") retrofit: Retrofit): LegalApi =
+        retrofit.create(LegalApi::class.java)
+
+    @Provides
+    @Singleton
     fun provideVoiceApi(@Named("iaRetrofit") retrofit: Retrofit): ApiService =
         retrofit.create(ApiService::class.java)
+
+
 
     // =========================
     // REPOSITORIES
@@ -172,6 +179,12 @@ object AppModule {
         sessionManager: SessionManager
     ): ProfileRepository =
         ProfileRepositoryImpl(api, sessionManager)
+
+    @Provides
+    @Singleton
+    fun provideLegalRepository(api: LegalApi): LegalRepository {
+        return LegalRepositoryImpl(api)
+    }
 
     @Provides
     @Singleton

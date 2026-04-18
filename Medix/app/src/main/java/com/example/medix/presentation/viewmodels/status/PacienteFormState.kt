@@ -9,5 +9,6 @@ data class PacienteFormState(
     val telefono: String = "",
     val correo: String = "",
     val idEps: String = "",
-    val epsNombre: String = "",
+    val epsNombre: String = ""
+
 )

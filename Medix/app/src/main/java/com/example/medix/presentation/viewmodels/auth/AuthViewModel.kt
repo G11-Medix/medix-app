@@ -7,6 +7,7 @@ import com.example.medix.core.auth.SessionManager
 import com.example.medix.data.dto.CreatePacienteRequest
 import com.example.medix.data.dto.EpsDto
 import com.example.medix.domain.repositories.AuthRepository
+import com.example.medix.domain.repositories.LegalRepository
 import com.example.medix.domain.repositories.PacienteRepository
 import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
 import com.example.medix.presentation.viewmodels.status.AuthUiState
@@ -22,6 +23,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val pacienteRepository: PacienteRepository,
+    private val legalRepository: LegalRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
     companion object {
@@ -228,12 +230,18 @@ class AuthViewModel @Inject constructor(
                 )
 
             }.onSuccess {
+                val consentAccepted = legalRepository.hasAcceptedLatest()
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         infoMessage = null,
                         errorMessage = null,
-                        navigationTarget = AuthNavigationTarget.SCHEDULE,
+                        navigationTarget = if (consentAccepted) {
+                            AuthNavigationTarget.SCHEDULE
+                        } else {
+                            AuthNavigationTarget.CONSENT
+                        },
                         pacienteForm = it.pacienteForm.copy(telefono = normalizedPhone),
                     )
                 }
@@ -301,12 +309,14 @@ class AuthViewModel @Inject constructor(
                 when (it) {
                     is RegistrationResult.OtpSent -> updateRegisterOtpState(it)
                     RegistrationResult.PacienteCreated -> {
+
+
                         _uiState.update { state ->
                             state.copy(
                                 isLoading = false,
                                 errorMessage = null,
                                 infoMessage = "Paciente creado correctamente.",
-                                navigationTarget = AuthNavigationTarget.SCHEDULE,
+                                navigationTarget = AuthNavigationTarget.CONSENT,
                             )
                         }
                     }
