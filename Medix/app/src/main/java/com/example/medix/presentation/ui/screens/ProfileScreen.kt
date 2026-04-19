@@ -60,7 +60,7 @@ fun ProfileScreen(
                 .padding(16.dp)
                 .padding(bottom = 80.dp)
         ) {
-
+            Spacer(modifier = Modifier.height(15.dp))
             TopBarProfile(
                 onLogout = onLogout
             )
