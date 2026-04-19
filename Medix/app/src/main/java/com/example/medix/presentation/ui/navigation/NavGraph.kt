@@ -110,7 +110,7 @@ fun NavGraph() {
                         navController.navigateAndClear(Screen.Schedule.route)
                     },
                     onReject = {
-                        authViewModel.resetPacienteForm()
+                        authViewModel.resetAuthState()
                         navController.navigateAndClear(Screen.Login.route)
                     }
                 )

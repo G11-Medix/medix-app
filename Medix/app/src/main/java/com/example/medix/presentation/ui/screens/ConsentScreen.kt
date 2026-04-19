@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medix.presentation.ui.components.consent.ConsentContentPanel
 import com.example.medix.presentation.ui.components.consent.ConsentInfoPanel
@@ -66,55 +67,70 @@ fun ConsentScreen(
 
             is UiState.Success -> {
 
-
-
                 val state = result.data
 
                 LaunchedEffect(state.accepted) {
-                    if (state.accepted) {
-                        onAccept()
-                    }
+                    if (state.accepted) onAccept()
                 }
 
                 if (isLandscape) {
-                    Row(modifier = Modifier.fillMaxSize()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
 
-
-
-                        ConsentInfoPanel(
-                            state = state,
+                        Card(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxHeight()
-                        )
+                                .fillMaxHeight(),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            ConsentInfoPanel(state = state)
+                        }
 
-                        ConsentContentPanel(
-                            state = state,
-                            onAccept = {
-                                viewModel.onAccept()
-                                onAccept()
-                            },
-                            onReject = onReject,
+                        Card(
                             modifier = Modifier
                                 .weight(2f)
-                                .fillMaxHeight()
-                        )
+                                .fillMaxHeight(),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            ConsentContentPanel(
+                                state = state,
+                                onAccept = {
+                                    viewModel.onAccept()
+                                    onAccept()
+                                },
+                                onReject = onReject
+                            )
+                        }
                     }
                 } else {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
 
+                        Card(elevation = CardDefaults.cardElevation(4.dp)) {
+                            ConsentInfoPanel(state = state)
+                        }
 
-                        ConsentInfoPanel(state = state)
-
-                        ConsentContentPanel(
-                            state = state,
-                            onAccept = {
-                                viewModel.onAccept()
-                                onAccept()
-                            },
-                            onReject = onReject,
-                            modifier = Modifier.weight(1f)
-                        )
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            ConsentContentPanel(
+                                state = state,
+                                onAccept = {
+                                    viewModel.onAccept()
+                                    onAccept()
+                                },
+                                onReject = onReject
+                            )
+                        }
                     }
                 }
             }

@@ -20,7 +20,8 @@ fun ConsentInfoPanel(
 ) {
     Column(
         modifier = modifier
-            .padding(16.dp)
+            .padding(20.dp)
+            .fillMaxWidth()
             .semantics {
                 contentDescription = "Información del documento legal"
             }
@@ -28,15 +29,21 @@ fun ConsentInfoPanel(
 
         Text(
             text = "Consentimiento informado",
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.semantics { heading() }
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         state.document?.let {
-            Text("Versión: ${it.version}")
-            Text("Fecha: ${it.fechaPublicacion}")
+            Text(
+                text = "Versión: ${it.version}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Fecha: ${it.fechaPublicacion}",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

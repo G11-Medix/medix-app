@@ -27,49 +27,71 @@ fun ConsentContentPanel(
     onReject: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     val scrollState = rememberScrollState()
 
     var checked by remember { mutableStateOf(false) }
     var reachedBottom by remember { mutableStateOf(false) }
 
     LaunchedEffect(scrollState.value) {
-        reachedBottom = scrollState.value == scrollState.maxValue
+        reachedBottom = scrollState.maxValue > 0 &&
+                scrollState.value >= scrollState.maxValue
     }
 
     Column(
         modifier = modifier
-            .padding(16.dp)
+            .padding(20.dp)
             .fillMaxSize()
     ) {
 
-        // 📜 Documento
-        Box(
+        // 📜 DOCUMENTO
+        Card(
             modifier = Modifier
                 .weight(1f)
-                .verticalScroll(scrollState)
-                .semantics {
-                    contentDescription = "Contenido del documento legal"
-                }
+                .fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(2.dp)
         ) {
-            Text(
-                text = state.document?.contenido?: "",
-                fontSize = 16.sp,
-                lineHeight = 24.sp
-            )
+
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+
+                // 🔵 PROGRESO
+                LinearProgressIndicator(
+                    progress = {
+                        if (scrollState.maxValue == 0) 0f
+                        else scrollState.value.toFloat() / scrollState.maxValue.toFloat()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // 📜 SCROLL REAL
+                Box(
+                    modifier = Modifier
+                        .weight(1f) // 🔥 CLAVE: fuerza altura real
+                        .verticalScroll(scrollState)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = state.document?.contenido ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 22.sp
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(12.dp))
 
-        // ⚠️ MENSAJE WCAG (CRÍTICO)
         if (!reachedBottom) {
             Text(
                 text = "Debes leer todo el documento antes de aceptar",
                 color = MaterialTheme.colorScheme.error
             )
-            Spacer(Modifier.height(8.dp))
         }
 
-        // ☑️ Checkbox accesible
+        Spacer(Modifier.height(8.dp))
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,15 +99,7 @@ fun ConsentContentPanel(
                     value = checked,
                     enabled = reachedBottom,
                     onValueChange = { checked = it }
-                )
-                .padding(8.dp)
-                .semantics {
-                    contentDescription =
-                        if (reachedBottom)
-                            "Aceptar términos y condiciones"
-                        else
-                            "Debes leer todo el documento antes de aceptar"
-                },
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -100,9 +114,8 @@ fun ConsentContentPanel(
             Text("He leído y acepto los términos")
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // 🔘 Botones (48dp mínimo)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -112,7 +125,7 @@ fun ConsentContentPanel(
                 onClick = onReject,
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
+                    .height(50.dp)
             ) {
                 Text("Rechazar")
             }
@@ -122,7 +135,7 @@ fun ConsentContentPanel(
                 enabled = checked && reachedBottom,
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
+                    .height(50.dp)
             ) {
                 Text("Aceptar")
             }
