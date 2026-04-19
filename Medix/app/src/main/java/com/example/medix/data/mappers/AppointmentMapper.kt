@@ -8,6 +8,7 @@ fun AppointmentDto.toDomain(): Appointment {
         id = id,
         name = nombre_ins,
         specialty = especialidad,
-        date = fecha_hora_cupo
+        date = fecha,
+        hour = hora
     )
 }
