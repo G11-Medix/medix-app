@@ -24,6 +24,17 @@ class AuthInterceptor @Inject constructor(
             }
         }.build()
 
-        return chain.proceed(request)
+        val response = chain.proceed(request)
+
+
+        if (response.code == 401) {
+            Log.d("AUTH", "401 detected → clearing session")
+
+            runBlocking {
+                sessionManager.clearSession()
+            }
+        }
+
+        return response
     }
 }
