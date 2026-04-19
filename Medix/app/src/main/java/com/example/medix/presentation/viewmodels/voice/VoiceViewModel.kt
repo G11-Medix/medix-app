@@ -122,6 +122,8 @@ class VoiceViewModel @Inject constructor(
 
                 if (text.isBlank()) error("Empty transcription")
 
+                setUserText(text)
+
                 val sentByWs = if (_uiState.value.wsConnected) {
                     repository.sendWebSocketMessage(text, _uiState.value.sessionId)
                 } else false
@@ -147,6 +149,10 @@ class VoiceViewModel @Inject constructor(
 
             isProcessingAudio = false
         }
+    }
+
+    private fun setUserText(text: String) {
+        _uiState.update { it.copy(userText = text) }
     }
 
     // TEXT
