@@ -219,6 +219,7 @@ class VoiceViewModel @Inject constructor(
                 val appointment = mapToAppointmentDto(data)
 
                 appointment?.let {
+                    Log.d("AppointmentConfirmation", "Appointment recibido: $it")
                     _uiState.update { state ->
                         state.copy(appointmentConfirmation = it)
                     }
