@@ -85,7 +85,7 @@ fun AppointmentCard(
                 color = getStateColor(state)
             ) {
                 Text(
-                    text = state,
+                    text = formatState(state),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White

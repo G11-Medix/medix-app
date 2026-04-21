@@ -12,3 +12,12 @@ fun getStateColor(state: String): Color {
         else -> MaterialTheme.colorScheme.primary
     }
 }
+
+
+fun formatState(state: String): String {
+    return when (state.trim().lowercase()) {
+        "scheduled" -> "Agendada"
+        "cancelled" -> "Cancelada"
+        else -> state
+    }
+}
