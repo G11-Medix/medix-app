@@ -9,7 +9,9 @@ import com.example.medix.presentation.ui.state.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,14 +55,21 @@ class AppointmentViewModel @Inject constructor(
     val upcomingAppointments: List<Appointment>
         get() = (_uiState.value as? UiState.Success)
             ?.data
-            ?.filter { LocalDateTime.parse(it.date).isAfter(LocalDateTime.now()) }
-            ?.sortedBy { LocalDateTime.parse(it.date) }
+            ?.filter { it.toLocalDateTime().isAfter(LocalDateTime.now()) }
+            ?.sortedBy { it.toLocalDateTime() }
             ?: emptyList()
 
     val pastAppointments: List<Appointment>
         get() = (_uiState.value as? UiState.Success)
             ?.data
-            ?.filter { LocalDateTime.parse(it.date).isBefore(LocalDateTime.now()) }
-            ?.sortedByDescending { LocalDateTime.parse(it.date) }
+            ?.filter { it.toLocalDateTime().isBefore(LocalDateTime.now()) }
+            ?.sortedByDescending { it.toLocalDateTime() }
             ?: emptyList()
+
+
+    fun Appointment.toLocalDateTime(): LocalDateTime {
+        val date = LocalDate.parse(this.date)
+        val time = LocalTime.parse(this.hour)
+        return LocalDateTime.of(date, time)
+    }
 }

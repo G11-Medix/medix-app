@@ -1,8 +1,14 @@
 package com.example.medix.data.dto
 
+
 data class AppointmentDto(
-    val id: String,
+    val id: Long,
+    val id_institucion: Long,
     val nombre_ins: String,
+    val logo_url: String,
     val especialidad: String,
-    val fecha_hora_cupo: String
+    val estado: String,
+    val fecha: String,
+    val hora: String
 )
+

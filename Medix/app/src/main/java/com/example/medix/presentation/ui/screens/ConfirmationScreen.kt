@@ -5,48 +5,57 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-
 import androidx.compose.material3.*
-
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import com.example.medix.presentation.ui.components.confirmation.AppointmentInfoCard
-import com.example.medix.presentation.ui.components.confirmation.OpenStreetMapView
-import com.example.medix.presentation.ui.components.confirmation.SuccessHeader
-import com.example.medix.presentation.ui.components.confirmation.TopBarConfirmation
-import com.example.medix.presentation.ui.state.UiState
-import com.example.medix.presentation.viewmodels.confirmation.ConfirmationViewModel
+import com.example.medix.presentation.ui.components.confirmation.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.content.res.Configuration
-import com.example.medix.presentation.ui.components.confirmation.MapSection
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
+
+
+fun getAuthorizationMessage(especialidad: String?): String? {
+    if (especialidad == null) return null
+
+    return when (especialidad.lowercase()) {
+
+        "medicina general" -> null
+
+        "pediatría", "pediatria" -> "Pediatría generalmente no requiere autorización previa de la EPS."
+
+        else -> "⚠️ Esta especialidad puede requerir autorización previa de la EPS antes de la atención."
+    }
+}
 
 @Composable
 fun ConfirmationScreen(
     onDone: () -> Unit
 ) {
-    val viewModel: ConfirmationViewModel = hiltViewModel()
-    val state = viewModel.uiState
+    val viewModel: VoiceViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
+
+    val appointment = uiState.appointmentConfirmation
 
     val configuration = LocalConfiguration.current
     val isLandscape =
         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    LaunchedEffect(Unit) {
-        viewModel.loadData()
+    val authMessage = appointment?.let {
+        getAuthorizationMessage(it.title) // ideal: reemplazar por specialty real
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .semantics { contentDescription = "Pantalla de confirmación de cita" },
         contentAlignment = Alignment.TopCenter
     ) {
 
@@ -62,97 +71,117 @@ fun ConfirmationScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (state) {
+            if (appointment == null) {
 
-                is UiState.Loading -> {
-                    Box(
-                        Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                Box(
+                    Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
 
-                is UiState.Error -> {
-                    Column(
+            } else {
+
+                if (isLandscape) {
+
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            text = state.message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Button(
-                            onClick = { viewModel.loadData() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Reintentar")
-                        }
-                    }
-                }
-
-                is UiState.Success -> {
-                    val data = state.data
-
-                    if (isLandscape) {
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                SuccessHeader(
-                                    title = data.title,
-                                    message = data.message,
-                                    status = data.status
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                AppointmentInfoCard(data)
-                            }
-
-                            MapSection(data)
-
-                        }
-
-                    } else {
 
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics { heading() }
                         ) {
 
                             SuccessHeader(
-                                title = data.title,
-                                message = data.message,
-                                status = data.status
+                                title = appointment.title,
+                                message = appointment.message,
+                                status = appointment.status
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            AppointmentInfoCard(data)
+                            // 📌 MENSAJE CONDICIONAL
+                            authMessage?.let { message ->
+                                Text(
+                                    text = message,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .padding(horizontal = 8.dp)
+                                        .fillMaxWidth()
+                                        .semantics {
+                                            contentDescription = "Mensaje de autorización EPS"
+                                        }
+                                )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
 
-                            MapSection(data)
+                            AppointmentInfoCard(appointment)
                         }
+
+                        MapSection(
+                            appointment,
+                            modifier = Modifier.semantics {
+                                contentDescription = "Ubicación de la cita en el mapa"
+                            }
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                } else {
 
-                    Text(
-                        text = "Un email de confirmación se envió con los detalles",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        SuccessHeader(
+                            title = appointment.title,
+                            message = appointment.message,
+                            status = appointment.status
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // 📌 MENSAJE CONDICIONAL
+                        authMessage?.let { message ->
+                            Text(
+                                text = message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .fillMaxWidth()
+                                    .semantics {
+                                        contentDescription = "Mensaje de autorización EPS"
+                                    }
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        AppointmentInfoCard(appointment)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        MapSection(
+                            appointment,
+                            modifier = Modifier.semantics {
+                                contentDescription = "Ubicación de la cita en el mapa"
+                            }
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Recomendaciones",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -161,10 +190,10 @@ fun ConfirmationScreen(
                 onClick = onDone,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .minimumInteractiveComponentSize(),
+                    .heightIn(min = 48.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Finalizar")
+                Text("Finalizar", fontSize = 16.sp)
             }
         }
     }

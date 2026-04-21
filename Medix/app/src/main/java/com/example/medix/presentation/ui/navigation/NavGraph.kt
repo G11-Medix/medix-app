@@ -5,7 +5,9 @@ import androidx.navigation.compose.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medix.presentation.ui.screens.*
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
+import com.example.medix.presentation.viewmodels.auth.ConsentViewModel
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
+import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 
 @Composable
@@ -22,10 +24,33 @@ fun NavGraph() {
         return
     }
 
-    val startDestination = if (sessionState.isLoggedIn) {
-        Screen.Schedule.route
-    } else {
-        Screen.Login.route
+    val startDestination = when {
+        !sessionState.isLoggedIn -> Screen.Login.route
+        !sessionState.hasAcceptedConsent -> Screen.Consent.route
+        else -> Screen.Schedule.route
+    }
+
+    val authState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(authState.navigationTarget) {
+        when (authState.navigationTarget) {
+
+            AuthNavigationTarget.CONSENT -> {
+                navController.navigateAndClear(Screen.Consent.route)
+            }
+
+            AuthNavigationTarget.SCHEDULE -> {
+                navController.navigateAndClear(Screen.Schedule.route)
+            }
+
+            AuthNavigationTarget.REGISTER -> {
+                navController.navigateSingleTop(Screen.Register1.route)
+            }
+
+            else -> Unit
+        }
+
+        authViewModel.onNavigationHandled()
     }
 
     key(sessionState.isLoggedIn) {
@@ -43,7 +68,7 @@ fun NavGraph() {
                 LoginScreen(
                     viewModel = authViewModel,
                     onLoginSuccess = {
-                        navController.navigateAndClear(Screen.Schedule.route)
+                        //
                     },
                     onNavigateToRegister = {
                         navController.navigateSingleTop(Screen.Register1.route)
@@ -76,11 +101,26 @@ fun NavGraph() {
                 )
             }
 
+
+
+            composable(Screen.Consent.route) {
+
+                ConsentScreen(
+                    onAccept = {
+                        navController.navigateAndClear(Screen.Schedule.route)
+                    },
+                    onReject = {
+                        authViewModel.resetAuthState()
+                        navController.navigateAndClear(Screen.Login.route)
+                    }
+                )
+            }
+
             composable(Screen.Register3.route) {
                 RegisterStep3(
                     viewModel = authViewModel,
                     onRegistrationSuccess = {
-                        navController.navigateAndClear(Screen.Schedule.route)
+                        navController.navigateAndClear(Screen.Login.route)
                     },
                     onBack = {
                         navController.popBackStack()

@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medix.core.auth.SessionManager
+import com.example.medix.data.dto.AppointmentConfirmationDto
 import com.example.medix.domain.repositories.VoiceRepository
 import com.example.medix.presentation.viewmodels.status.ConversationStatus
 import com.example.medix.presentation.viewmodels.status.VoiceUiState
@@ -38,6 +39,7 @@ class VoiceViewModel @Inject constructor(
 
     private val _isMuted = MutableStateFlow(false)
     val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
+
 
     private var currentAudioFile: File? = null
     private var isProcessingAudio = false
@@ -122,6 +124,8 @@ class VoiceViewModel @Inject constructor(
 
                 if (text.isBlank()) error("Empty transcription")
 
+                setUserText(text)
+
                 val sentByWs = if (_uiState.value.wsConnected) {
                     repository.sendWebSocketMessage(text, _uiState.value.sessionId)
                 } else false
@@ -139,7 +143,7 @@ class VoiceViewModel @Inject constructor(
                 }
             }.onSuccess { response ->
                 response?.let {
-                    updateAssistantResponse(it.response, it.completed)
+                    updateAssistantResponse(it.response, it.completed, it.audio_base64)
                 }
             }.onFailure {
                 showError("Error procesando audio")
@@ -147,6 +151,10 @@ class VoiceViewModel @Inject constructor(
 
             isProcessingAudio = false
         }
+    }
+
+    private fun setUserText(text: String) {
+        _uiState.update { it.copy(userText = text) }
     }
 
     // TEXT
@@ -166,7 +174,7 @@ class VoiceViewModel @Inject constructor(
             runCatching {
                 repository.sendConversationMessage(text, _uiState.value.sessionId)
             }.onSuccess {
-                updateAssistantResponse(it.response, it.completed)
+                updateAssistantResponse(it.response, it.completed, it.audio_base64)
             }.onFailure {
                 showError("Error enviando texto")
             }
@@ -191,9 +199,13 @@ class VoiceViewModel @Inject constructor(
     private fun handleWebSocketPayload(payload: String) {
         runCatching {
             val json = JSONObject(payload)
+
             val response = json.optString("response")
             val state = json.optString("state")
             val completed = json.optBoolean("completed", false)
+            val action = json.optString("action", null)
+            val data = json.optJSONObject("data")
+            val audioBase64 = json.optString("audio_base64").takeIf { it.isNotEmpty() }
 
             val status = when (state.lowercase()) {
                 "listening" -> ConversationStatus.LISTENING
@@ -202,8 +214,21 @@ class VoiceViewModel @Inject constructor(
                 else -> _uiState.value.status
             }
 
+            // ✅ 1. Procesa acción SIEMPRE (independiente del response)
+            if (completed && action == "CREATE_APPOINTMENT" && data != null) {
+                val appointment = mapToAppointmentDto(data)
+
+                appointment?.let {
+                    Log.d("AppointmentConfirmation", "Appointment recibido: $it")
+                    _uiState.update { state ->
+                        state.copy(appointmentConfirmation = it)
+                    }
+                }
+            }
+
+            // ✅ 2. Manejo de respuesta
             if (response.isNotBlank()) {
-                updateAssistantResponse(response, completed)
+                updateAssistantResponse(response, completed, audioBase64)
             } else {
                 _uiState.update {
                     it.copy(
@@ -212,7 +237,27 @@ class VoiceViewModel @Inject constructor(
                     )
                 }
             }
+
+        }.onFailure {
+            showError("Error procesando mensaje WS")
         }
+    }
+
+    private fun mapToAppointmentDto(data: JSONObject): AppointmentConfirmationDto? {
+        val confirmation = data.optJSONObject("confirmation") ?: return null
+
+        return AppointmentConfirmationDto(
+            doctorName = confirmation.optString("doctor"),
+            date = confirmation.optString("fecha"),
+            clinicName = confirmation.optString("institucion"),
+            address = confirmation.optString("direccion"),
+            lat = confirmation.optDouble("latitud"),
+            lon = confirmation.optDouble("longitud"),
+            status = confirmation.optString("estado").uppercase(),
+
+            title = "Cita agendada",
+            message = "Tu cita ha sido programada correctamente"
+        )
     }
 
     fun sendTextByWebSocket(text: String) {
@@ -240,7 +285,11 @@ class VoiceViewModel @Inject constructor(
         _isMuted.value = !_isMuted.value
     }
 
-    private fun updateAssistantResponse(response: String, completed: Boolean) {
+    private fun updateAssistantResponse(
+        response: String,
+        completed: Boolean,
+        audioBase64: String? = null,
+    ) {
         _uiState.update {
             it.copy(
                 assistantText = response,
@@ -251,7 +300,11 @@ class VoiceViewModel @Inject constructor(
         }
 
         if (response.isNotBlank()) {
-            player.speak(response, isMuted = _isMuted.value)
+            if (!audioBase64.isNullOrEmpty()) {
+                player.playBase64Audio(audioBase64, isMuted = _isMuted.value, fallbackText = response)
+            } else {
+                player.speak(response, isMuted = _isMuted.value)
+            }
         }
     }
 

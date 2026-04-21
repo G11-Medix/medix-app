@@ -8,10 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontWeight
-import com.example.medix.core.utils.DateUtils
 import com.example.medix.domain.entities.Appointment
-import com.example.medix.presentation.ui.components.records.AppointmentCard
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 
@@ -19,13 +16,14 @@ import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 fun ContentState(
     state: UiState<*>,
     viewModel: AppointmentViewModel,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     when (state) {
 
         is UiState.Loading -> {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
@@ -34,10 +32,9 @@ fun ContentState(
 
         is UiState.Error -> {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Text(
                     text = state.message,
                     color = MaterialTheme.colorScheme.error
@@ -54,8 +51,12 @@ fun ContentState(
         is UiState.Success<*> -> {
             val success = state as UiState.Success<List<Appointment>>
 
+            val filteredAppointments = success.data
+                .filter { it.state.lowercase() != "cancelled" }
+                .take(3)
+
             AppointmentSection(
-                appointments = success.data.take(2),
+                appointments = filteredAppointments,
                 onSeeAllClick = { onNavigate("records") }
             )
         }

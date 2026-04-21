@@ -26,7 +26,9 @@ fun ActiveSessionHeader(status: ConversationStatus) {
         else -> Color.Gray to "Conectando"
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
         Text(
             text = "Sesión activa",
@@ -34,22 +36,16 @@ fun ActiveSessionHeader(status: ConversationStatus) {
             color = Color.Gray
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        Box(
-            modifier = Modifier
-                .size(110.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.HealthAndSafety,
-                contentDescription = "Estado del asistente",
-                tint = Color(0xFF1565C0),
-                modifier = Modifier.size(42.dp)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.HealthAndSafety,
+            contentDescription = "Estado del asistente",
+            tint = Color(0xFF1565C0),
+            modifier = Modifier.size(80.dp) //
+        )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Text(
             text = title,
@@ -59,7 +55,9 @@ fun ActiveSessionHeader(status: ConversationStatus) {
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
             Box(
                 modifier = Modifier

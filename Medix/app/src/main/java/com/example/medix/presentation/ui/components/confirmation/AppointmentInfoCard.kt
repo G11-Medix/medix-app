@@ -37,7 +37,7 @@ fun AppointmentInfoCard(data: AppointmentConfirmationDto) {
             )
 
             Text(
-                DateUtils.formatAppointmentDate(data.date),
+                DateUtils.formatAppointmentDateConfirmation(data.date),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
