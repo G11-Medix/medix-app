@@ -139,7 +139,7 @@ class VoiceViewModel @Inject constructor(
                 }
             }.onSuccess { response ->
                 response?.let {
-                    updateAssistantResponse(it.response, it.completed)
+                    updateAssistantResponse(it.response, it.completed, it.audio_base64)
                 }
             }.onFailure {
                 showError("Error procesando audio")
@@ -166,7 +166,7 @@ class VoiceViewModel @Inject constructor(
             runCatching {
                 repository.sendConversationMessage(text, _uiState.value.sessionId)
             }.onSuccess {
-                updateAssistantResponse(it.response, it.completed)
+                updateAssistantResponse(it.response, it.completed, it.audio_base64)
             }.onFailure {
                 showError("Error enviando texto")
             }
@@ -194,6 +194,7 @@ class VoiceViewModel @Inject constructor(
             val response = json.optString("response")
             val state = json.optString("state")
             val completed = json.optBoolean("completed", false)
+            val audioBase64 = json.optString("audio_base64").takeIf { it.isNotEmpty() }
 
             val status = when (state.lowercase()) {
                 "listening" -> ConversationStatus.LISTENING
@@ -203,7 +204,7 @@ class VoiceViewModel @Inject constructor(
             }
 
             if (response.isNotBlank()) {
-                updateAssistantResponse(response, completed)
+                updateAssistantResponse(response, completed, audioBase64)
             } else {
                 _uiState.update {
                     it.copy(
@@ -240,7 +241,11 @@ class VoiceViewModel @Inject constructor(
         _isMuted.value = !_isMuted.value
     }
 
-    private fun updateAssistantResponse(response: String, completed: Boolean) {
+    private fun updateAssistantResponse(
+        response: String,
+        completed: Boolean,
+        audioBase64: String? = null,
+    ) {
         _uiState.update {
             it.copy(
                 assistantText = response,
@@ -251,7 +256,11 @@ class VoiceViewModel @Inject constructor(
         }
 
         if (response.isNotBlank()) {
-            player.speak(response, isMuted = _isMuted.value)
+            if (!audioBase64.isNullOrEmpty()) {
+                player.playBase64Audio(audioBase64, isMuted = _isMuted.value, fallbackText = response)
+            } else {
+                player.speak(response, isMuted = _isMuted.value)
+            }
         }
     }
 
