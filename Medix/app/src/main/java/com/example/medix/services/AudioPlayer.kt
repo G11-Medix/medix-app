@@ -1,13 +1,18 @@
 package com.example.medix.services
 
 import android.content.Context
+import android.media.MediaPlayer
 import android.speech.tts.TextToSpeech
+import android.util.Base64
 import android.util.Log
+import java.io.File
 import java.util.Locale
 
 class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
 
-    private var textToSpeech: TextToSpeech = TextToSpeech(context.applicationContext, this)
+    private val appContext = context.applicationContext
+    private var textToSpeech: TextToSpeech = TextToSpeech(appContext, this)
+    private var mediaPlayer: MediaPlayer? = null
     private var isReady = false
     private var pendingText: String? = null
     private var pendingId: String? = null
@@ -74,10 +79,46 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
         pendingId = null
     }
 
+    fun playBase64Audio(base64: String, isMuted: Boolean, fallbackText: String) {
+        if (isMuted) {
+            Log.d("AudioPlayer", "Muted → not playing base64 audio")
+            return
+        }
+        try {
+            val bytes = Base64.decode(base64, Base64.DEFAULT)
+            val tempFile = File.createTempFile("tts_", ".mp3", appContext.cacheDir)
+            tempFile.writeBytes(bytes)
+
+            mediaPlayer?.release()
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(tempFile.absolutePath)
+                prepare()
+                start()
+                setOnCompletionListener {
+                    tempFile.delete()
+                    release()
+                    mediaPlayer = null
+                    Log.d("AudioPlayer", "MediaPlayer playback completed")
+                }
+            }
+            Log.d("AudioPlayer", "Playing Edge-TTS audio (${bytes.size} bytes)")
+        } catch (e: Exception) {
+            Log.e("AudioPlayer", "MediaPlayer failed, falling back to TextToSpeech", e)
+            speak(fallbackText, isMuted)
+        }
+    }
+
     fun release() {
         isReady = false
         pendingText = null
         pendingId = null
+        try {
+            mediaPlayer?.stop()
+            mediaPlayer?.release()
+            mediaPlayer = null
+        } catch (e: Exception) {
+            Log.e("AudioPlayer", "Error releasing MediaPlayer", e)
+        }
         try {
             textToSpeech.stop()
             textToSpeech.shutdown()
