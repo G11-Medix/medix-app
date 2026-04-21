@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medix.core.auth.SessionManager
+import com.example.medix.data.dto.AppointmentConfirmationDto
 import com.example.medix.domain.repositories.VoiceRepository
 import com.example.medix.presentation.viewmodels.status.ConversationStatus
 import com.example.medix.presentation.viewmodels.status.VoiceUiState
@@ -38,6 +39,7 @@ class VoiceViewModel @Inject constructor(
 
     private val _isMuted = MutableStateFlow(false)
     val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
+
 
     private var currentAudioFile: File? = null
     private var isProcessingAudio = false
@@ -197,9 +199,12 @@ class VoiceViewModel @Inject constructor(
     private fun handleWebSocketPayload(payload: String) {
         runCatching {
             val json = JSONObject(payload)
+
             val response = json.optString("response")
             val state = json.optString("state")
             val completed = json.optBoolean("completed", false)
+            val action = json.optString("action", null)
+            val data = json.optJSONObject("data")
 
             val status = when (state.lowercase()) {
                 "listening" -> ConversationStatus.LISTENING
@@ -208,6 +213,18 @@ class VoiceViewModel @Inject constructor(
                 else -> _uiState.value.status
             }
 
+            // ✅ 1. Procesa acción SIEMPRE (independiente del response)
+            if (completed && action == "CREATE_APPOINTMENT" && data != null) {
+                val appointment = mapToAppointmentDto(data)
+
+                appointment?.let {
+                    _uiState.update { state ->
+                        state.copy(appointmentConfirmation = it)
+                    }
+                }
+            }
+
+            // ✅ 2. Manejo de respuesta
             if (response.isNotBlank()) {
                 updateAssistantResponse(response, completed)
             } else {
@@ -218,7 +235,27 @@ class VoiceViewModel @Inject constructor(
                     )
                 }
             }
+
+        }.onFailure {
+            showError("Error procesando mensaje WS")
         }
+    }
+
+    private fun mapToAppointmentDto(data: JSONObject): AppointmentConfirmationDto? {
+        val confirmation = data.optJSONObject("confirmation") ?: return null
+
+        return AppointmentConfirmationDto(
+            doctorName = confirmation.optString("doctor"),
+            date = confirmation.optString("fecha"),
+            clinicName = confirmation.optString("institucion"),
+            address = confirmation.optString("direccion"),
+            lat = confirmation.optDouble("latitud"),
+            lon = confirmation.optDouble("longitud"),
+            status = confirmation.optString("estado").uppercase(),
+
+            title = "Cita agendada",
+            message = "Tu cita ha sido programada correctamente"
+        )
     }
 
     fun sendTextByWebSocket(text: String) {
