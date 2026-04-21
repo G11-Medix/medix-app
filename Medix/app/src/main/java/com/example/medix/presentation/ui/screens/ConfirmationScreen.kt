@@ -6,24 +6,33 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.medix.presentation.ui.components.confirmation.AppointmentInfoCard
-import com.example.medix.presentation.ui.components.confirmation.SuccessHeader
-import com.example.medix.presentation.ui.components.confirmation.TopBarConfirmation
+import com.example.medix.presentation.ui.components.confirmation.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.content.res.Configuration
-import androidx.compose.runtime.collectAsState
-import com.example.medix.presentation.ui.components.confirmation.MapSection
-import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.runtime.getValue
+import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
+
+
+fun getAuthorizationMessage(especialidad: String?): String? {
+    if (especialidad == null) return null
+
+    return when (especialidad.lowercase()) {
+
+        "medicina general" -> null
+
+        "pediatría", "pediatria" -> "Pediatría generalmente no requiere autorización previa de la EPS."
+
+        else -> "⚠️ Esta especialidad puede requerir autorización previa de la EPS antes de la atención."
+    }
+}
 
 @Composable
 fun ConfirmationScreen(
@@ -37,6 +46,10 @@ fun ConfirmationScreen(
     val configuration = LocalConfiguration.current
     val isLandscape =
         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val authMessage = appointment?.let {
+        getAuthorizationMessage(it.title) // ideal: reemplazar por specialty real
+    }
 
     Box(
         modifier = Modifier
@@ -61,9 +74,7 @@ fun ConfirmationScreen(
             if (appointment == null) {
 
                 Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .semantics { contentDescription = "Cargando confirmación" },
+                    Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -83,13 +94,31 @@ fun ConfirmationScreen(
                                 .weight(1f)
                                 .semantics { heading() }
                         ) {
+
                             SuccessHeader(
                                 title = appointment.title,
                                 message = appointment.message,
                                 status = appointment.status
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // 📌 MENSAJE CONDICIONAL
+                            authMessage?.let { message ->
+                                Text(
+                                    text = message,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .padding(horizontal = 8.dp)
+                                        .fillMaxWidth()
+                                        .semantics {
+                                            contentDescription = "Mensaje de autorización EPS"
+                                        }
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
 
                             AppointmentInfoCard(appointment)
                         }
@@ -114,7 +143,24 @@ fun ConfirmationScreen(
                             status = appointment.status
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // 📌 MENSAJE CONDICIONAL
+                        authMessage?.let { message ->
+                            Text(
+                                text = message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .fillMaxWidth()
+                                    .semantics {
+                                        contentDescription = "Mensaje de autorización EPS"
+                                    }
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
 
                         AppointmentInfoCard(appointment)
 
@@ -132,12 +178,9 @@ fun ConfirmationScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Un email de confirmación se envió con los detalles",
+                    text = "Recomendaciones",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.semantics {
-                        contentDescription = "Se envió un correo de confirmación"
-                    }
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -147,16 +190,10 @@ fun ConfirmationScreen(
                 onClick = onDone,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp) // 👈 tamaño táctil WCAG
-                    .semantics {
-                        contentDescription = "Finalizar y salir de la confirmación"
-                    },
+                    .heightIn(min = 48.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text(
-                    "Finalizar",
-                    fontSize = 16.sp // 👈 evita texto muy pequeño
-                )
+                Text("Finalizar", fontSize = 16.sp)
             }
         }
     }
