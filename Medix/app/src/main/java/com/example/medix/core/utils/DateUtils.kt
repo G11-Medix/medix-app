@@ -55,20 +55,26 @@ object DateUtils {
             val formattedTime = dateTime.format(timeFormatter)
 
             when {
-                appointmentDate == now -> "Hoy, $formattedTime"
-                appointmentDate == now.plusDays(1) -> "Mañana, $formattedTime"
+                appointmentDate == now ->
+                    "Hoy, $formattedTime"
 
-                appointmentDate.month == now.month && appointmentDate.year == now.year -> {
-                    val formatter = DateTimeFormatter.ofPattern("EEEE, h:mm a", Locale("es"))
+                appointmentDate == now.plusDays(1) ->
+                    "Mañana, $formattedTime"
+
+                appointmentDate.year == now.year && appointmentDate.month == now.month -> {
+                    // mismo mes
+                    val formatter = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM, h:mm a", Locale("es"))
                     dateTime.format(formatter)
                 }
 
                 appointmentDate.year == now.year -> {
+                    // mismo año, otro mes
                     val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM, h:mm a", Locale("es"))
                     dateTime.format(formatter)
                 }
 
                 else -> {
+                    // otro año
                     val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy, h:mm a", Locale("es"))
                     dateTime.format(formatter)
                 }
