@@ -23,7 +23,9 @@ import androidx.compose.ui.unit.sp
 fun PastAppointmentCard(
     name: String,
     specialty: String,
-    date: String
+    date: String,
+    state: String,
+    logo_url: String,
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),

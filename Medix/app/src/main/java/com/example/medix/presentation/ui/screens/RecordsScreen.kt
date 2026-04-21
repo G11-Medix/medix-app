@@ -17,9 +17,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalConfiguration
-
-import com.example.medix.core.utils.DateUtils
-import com.example.medix.presentation.ui.components.records.AppointmentCard
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.HeaderSection
 import com.example.medix.presentation.ui.components.records.PastAppointmentCard

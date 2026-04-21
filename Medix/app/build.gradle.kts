@@ -124,6 +124,8 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     ksp("com.google.dagger:hilt-compiler:2.59.2")
 
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
 
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("androidx.datastore:datastore-preferences:1.1.1")

@@ -44,13 +44,17 @@ fun RecordsColumn(
                     PastAppointmentCard(
                         name = it.name,
                         specialty = it.specialty,
-                        date = DateUtils.formatAppointmentDate(it.date)
+                        date = DateUtils.formatAppointmentDate(it.date,it.hour),
+                        state =it.state,
+                        logo_url = it.logo_url
                     )
                 } else {
                     AppointmentCard(
                         name = it.name,
                         specialty = it.specialty,
-                        date = DateUtils.formatAppointmentDate(it.date)
+                        date = DateUtils.formatAppointmentDate(it.date,it.hour),
+                        state =it.state,
+                        logo_url = it.logo_url
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))

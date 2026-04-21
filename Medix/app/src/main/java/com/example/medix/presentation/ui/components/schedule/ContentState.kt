@@ -8,10 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontWeight
-import com.example.medix.core.utils.DateUtils
 import com.example.medix.domain.entities.Appointment
-import com.example.medix.presentation.ui.components.records.AppointmentCard
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 
@@ -54,8 +51,12 @@ fun ContentState(
         is UiState.Success<*> -> {
             val success = state as UiState.Success<List<Appointment>>
 
+            val filteredAppointments = success.data
+                .filter { it.state.lowercase() != "cancelled" }
+                .take(3)
+
             AppointmentSection(
-                appointments = success.data.take(2),
+                appointments = filteredAppointments,
                 onSeeAllClick = { onNavigate("records") }
             )
         }
