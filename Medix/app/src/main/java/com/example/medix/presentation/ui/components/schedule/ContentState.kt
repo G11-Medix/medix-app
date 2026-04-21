@@ -16,13 +16,14 @@ import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 fun ContentState(
     state: UiState<*>,
     viewModel: AppointmentViewModel,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     when (state) {
 
         is UiState.Loading -> {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
@@ -31,10 +32,9 @@ fun ContentState(
 
         is UiState.Error -> {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Text(
                     text = state.message,
                     color = MaterialTheme.colorScheme.error

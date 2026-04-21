@@ -53,7 +53,6 @@ fun RecordsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
                 .padding(bottom = 80.dp) // espacio navbar
         ) {

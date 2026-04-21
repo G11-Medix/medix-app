@@ -13,14 +13,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TranscriptCard(title: String, text: String) {
+fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
 
     Card(
         shape = RoundedCornerShape(30.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2FB)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(350.dp)
+        modifier = modifier
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
@@ -31,7 +29,6 @@ fun TranscriptCard(title: String, text: String) {
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-
 
             Column(
                 modifier = Modifier
@@ -49,7 +46,6 @@ fun TranscriptCard(title: String, text: String) {
         }
     }
 }
-
 
 fun formatTranscript(text: String): String {
     var formatted = text.trim()

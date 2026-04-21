@@ -33,60 +33,40 @@ fun ScheduleScreen(
     val viewModel: AppointmentViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
 
-    val configuration = LocalConfiguration.current
-    val isLandscape =
-        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
 
-        // CONTENIDO
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
-                .padding(bottom = 80.dp) // espacio navbar
+                .padding(bottom = 80.dp)
                 .widthIn(max = 600.dp)
-                .align(Alignment.TopCenter)
         ) {
 
             HeaderSection(onNotificationsClick = onNotificationsClick)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (isLandscape) {
-                Row(modifier = Modifier.fillMaxWidth()) {
+            GreetingSection()
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        GreetingSection()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        VoiceCard(onMicClick = onStartVoice)
-                    }
+            Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.width(16.dp))
+            VoiceCard(onMicClick = onStartVoice)
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        ContentState(state, viewModel, onNavigate)
-                    }
-                }
-            } else {
-                GreetingSection()
+            Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                VoiceCard(onMicClick = onStartVoice)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                ContentState(state, viewModel, onNavigate)
-            }
+            ContentState(
+                state = state,
+                viewModel = viewModel,
+                onNavigate = onNavigate,
+                modifier = Modifier.weight(1f)
+            )
         }
 
-        // NAVBAR FIJO
         BottomNavigationBar(
             currentRoute = currentRoute,
             onNavigate = onNavigate,

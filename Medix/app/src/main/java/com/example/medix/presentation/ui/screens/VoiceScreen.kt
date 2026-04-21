@@ -96,7 +96,10 @@ fun VoiceScreen(
                     ) {
                         TranscriptCard(
                             "Asistente Medix:",
-                            state.assistantText
+                            state.assistantText,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
                         )
                     }
 
@@ -158,7 +161,10 @@ fun VoiceScreen(
 
                     TranscriptCard(
                         "Asistente Medix:",
-                        state.assistantText
+                        state.assistantText,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
                     )
                 }
 
