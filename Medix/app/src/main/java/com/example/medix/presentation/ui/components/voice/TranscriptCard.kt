@@ -16,11 +16,11 @@ import androidx.compose.ui.unit.sp
 fun TranscriptCard(title: String, text: String) {
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(30.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2FB)),
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
+            .height(350.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
