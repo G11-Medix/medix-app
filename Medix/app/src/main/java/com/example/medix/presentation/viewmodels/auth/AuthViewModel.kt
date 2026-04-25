@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medix.core.auth.SessionManager
+import com.example.medix.core.phone.CountryDialCodes
 import com.example.medix.data.dto.CreatePacienteRequest
 import com.example.medix.data.dto.EpsDto
 import com.example.medix.domain.repositories.AuthRepository
@@ -34,10 +35,24 @@ class AuthViewModel @Inject constructor(
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     fun updatePhone(phone: String) {
+        val phoneDigits = phone.filter(Char::isDigit)
         _uiState.update {
             it.copy(
-                phone = phone,
-                pacienteForm = it.pacienteForm.copy(telefono = phone),
+                phone = phoneDigits,
+                pacienteForm = it.pacienteForm.copy(telefono = phoneDigits),
+                otpCode = "",
+                otpSent = false,
+                errorMessage = null,
+                infoMessage = null,
+            )
+        }
+    }
+
+    fun updatePhoneCountryCode(code: String) {
+        val normalizedCode = CountryDialCodes.sanitizeDialCode(code)
+        _uiState.update {
+            it.copy(
+                phoneCountryCode = normalizedCode,
                 otpCode = "",
                 otpSent = false,
                 errorMessage = null,
@@ -84,9 +99,12 @@ class AuthViewModel @Inject constructor(
     }
 
     fun requestOtp() {
-        val normalizedPhone = normalizePhone(_uiState.value.phone)
+        val normalizedPhone = buildInternationalPhone(
+            countryCode = _uiState.value.phoneCountryCode,
+            nationalNumber = _uiState.value.phone,
+        )
         if (normalizedPhone.isBlank()) {
-            showError("Ingresa un teléfono en formato internacional, por ejemplo +573001234567.")
+            showError("Ingresa un teléfono válido para continuar.")
             return
         }
 
@@ -98,7 +116,10 @@ class AuthViewModel @Inject constructor(
     }
 
     fun resendLoginOtp() {
-        val normalizedPhone = normalizePhone(_uiState.value.phone)
+        val normalizedPhone = buildInternationalPhone(
+            countryCode = _uiState.value.phoneCountryCode,
+            nationalNumber = _uiState.value.phone,
+        )
         if (normalizedPhone.isBlank()) {
             showError("Ingresa un teléfono válido antes de reenviar el código.")
             return
@@ -108,7 +129,10 @@ class AuthViewModel @Inject constructor(
     }
 
     fun resendRegisterOtp() {
-        val normalizedPhone = normalizePhone(_uiState.value.pacienteForm.telefono)
+        val normalizedPhone = buildInternationalPhone(
+            countryCode = _uiState.value.phoneCountryCode,
+            nationalNumber = _uiState.value.pacienteForm.telefono,
+        )
         if (normalizedPhone.isBlank()) {
             showError("Ingresa un teléfono válido antes de reenviar el código.")
             return
@@ -172,9 +196,12 @@ class AuthViewModel @Inject constructor(
 
                 authRepository.requestOtp(normalizedPhone)
             }.onSuccess {
+                val (countryCode, nationalNumber) = splitInternationalPhone(normalizedPhone)
                 _uiState.update {
                     it.copy(
-                        phone = normalizedPhone,
+                        phoneCountryCode = countryCode,
+                        phone = nationalNumber,
+                        pacienteForm = it.pacienteForm.copy(telefono = nationalNumber),
                         otpSent = true,
                         infoMessage = if (isResend) {
                             "Te reenviamos el código por SMS."
@@ -196,7 +223,10 @@ class AuthViewModel @Inject constructor(
     }
 
     fun verifyOtpAndResolveFlow() {
-        val normalizedPhone = normalizePhone(_uiState.value.phone)
+        val normalizedPhone = buildInternationalPhone(
+            countryCode = _uiState.value.phoneCountryCode,
+            nationalNumber = _uiState.value.phone,
+        )
         val otpCode = _uiState.value.otpCode.trim()
 
         if (normalizedPhone.isBlank()) {
@@ -242,7 +272,7 @@ class AuthViewModel @Inject constructor(
                         } else {
                             AuthNavigationTarget.CONSENT
                         },
-                        pacienteForm = it.pacienteForm.copy(telefono = normalizedPhone),
+                        pacienteForm = it.pacienteForm.copy(telefono = it.phone),
                     )
                 }
             }.onFailure {
@@ -258,7 +288,10 @@ class AuthViewModel @Inject constructor(
 
     fun registerPaciente() {
         val form = _uiState.value.pacienteForm
-        val normalizedPhone = normalizePhone(form.telefono)
+        val normalizedPhone = buildInternationalPhone(
+            countryCode = _uiState.value.phoneCountryCode,
+            nationalNumber = form.telefono,
+        )
 
         val validationError = validatePacienteForm(form, normalizedPhone)
         if (validationError != null) {
@@ -389,10 +422,12 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun navigateToRegister(phone: String) {
+        val (countryCode, nationalNumber) = splitInternationalPhone(phone)
         _uiState.update {
             it.copy(
-                phone = phone,
-                pacienteForm = it.pacienteForm.copy(telefono = phone),
+                phoneCountryCode = countryCode,
+                phone = nationalNumber,
+                pacienteForm = it.pacienteForm.copy(telefono = nationalNumber),
                 isLoading = false,
                 otpSent = false,
                 otpCode = "",
@@ -403,25 +438,29 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    private fun normalizePhone(phone: String): String {
-        val compactPhone = phone.filterNot(Char::isWhitespace)
-        if (compactPhone.isBlank()) {
+    private fun buildInternationalPhone(
+        countryCode: String,
+        nationalNumber: String,
+    ): String {
+        val digitsOnly = nationalNumber.filter(Char::isDigit)
+        if (digitsOnly.isBlank()) {
             return ""
         }
 
-        val digitsOnly = compactPhone.filter(Char::isDigit)
-        return if (digitsOnly.isBlank()) {
-            ""
-        } else {
-            "+$digitsOnly"
-        }
+        return "${CountryDialCodes.sanitizeDialCode(countryCode)}$digitsOnly"
+    }
+
+    private fun splitInternationalPhone(phone: String): Pair<String, String> {
+        return CountryDialCodes.matchByInternationalPhone(phone)
     }
 
     private fun updateRegisterOtpState(result: RegistrationResult.OtpSent) {
+        val (countryCode, nationalNumber) = splitInternationalPhone(result.phone)
         _uiState.update { state ->
             state.copy(
-                phone = result.phone,
-                pacienteForm = state.pacienteForm.copy(telefono = result.phone),
+                phoneCountryCode = countryCode,
+                phone = nationalNumber,
+                pacienteForm = state.pacienteForm.copy(telefono = nationalNumber),
                 otpSent = true,
                 isLoading = false,
                 errorMessage = null,

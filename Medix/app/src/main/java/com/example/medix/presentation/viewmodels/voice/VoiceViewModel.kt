@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medix.core.auth.SessionManager
 import com.example.medix.data.dto.AppointmentConfirmationDto
+import com.example.medix.data.dto.ConversationData
 import com.example.medix.domain.repositories.VoiceRepository
 import com.example.medix.presentation.viewmodels.status.ConversationStatus
 import com.example.medix.presentation.viewmodels.status.VoiceUiState
@@ -45,6 +46,12 @@ class VoiceViewModel @Inject constructor(
     private var isProcessingAudio = false
     private var isRecordingPressActive = false
     private var wsReadyForSession = false
+
+    private val appointmentCompletionActions = setOf(
+        "CREATE_APPOINTMENT",
+        "RESCHEDULE_APPOINTMENT",
+        "REPROGRAM_APPOINTMENT",
+    )
 
     /*
     init {
@@ -143,6 +150,12 @@ class VoiceViewModel @Inject constructor(
                 }
             }.onSuccess { response ->
                 response?.let {
+                    handleAppointmentCompletion(
+                        completed = it.completed,
+                        action = it.action,
+                        responseText = it.response,
+                        data = it.data,
+                    )
                     updateAssistantResponse(it.response, it.completed, it.audio_base64)
                 }
             }.onFailure {
@@ -174,6 +187,12 @@ class VoiceViewModel @Inject constructor(
             runCatching {
                 repository.sendConversationMessage(text, _uiState.value.sessionId)
             }.onSuccess {
+                handleAppointmentCompletion(
+                    completed = it.completed,
+                    action = it.action,
+                    responseText = it.response,
+                    data = it.data,
+                )
                 updateAssistantResponse(it.response, it.completed, it.audio_base64)
             }.onFailure {
                 showError("Error enviando texto")
@@ -203,7 +222,7 @@ class VoiceViewModel @Inject constructor(
             val response = json.optString("response")
             val state = json.optString("state")
             val completed = json.optBoolean("completed", false)
-            val action = json.optString("action", null)
+            val action = json.optString("action").takeIf { it.isNotBlank() }
             val data = json.optJSONObject("data")
             val audioBase64 = json.optString("audio_base64").takeIf { it.isNotEmpty() }
 
@@ -214,14 +233,20 @@ class VoiceViewModel @Inject constructor(
                 else -> _uiState.value.status
             }
 
-            // ✅ 1. Procesa acción SIEMPRE (independiente del response)
-            if (completed && action == "CREATE_APPOINTMENT" && data != null) {
-                val appointment = mapToAppointmentDto(data)
+            if (completed && isAppointmentCompletionAction(action) && data != null) {
+                val appointment = mapToAppointmentDto(
+                    data = data,
+                    action = action!!,
+                    responseText = response,
+                )
 
                 appointment?.let {
                     Log.d("AppointmentConfirmation", "Appointment recibido: $it")
                     _uiState.update { state ->
-                        state.copy(appointmentConfirmation = it)
+                        state.copy(
+                            appointmentConfirmation = it,
+                            navigateToConfirmation = true,
+                        )
                     }
                 }
             }
@@ -243,21 +268,94 @@ class VoiceViewModel @Inject constructor(
         }
     }
 
-    private fun mapToAppointmentDto(data: JSONObject): AppointmentConfirmationDto? {
+    private fun handleAppointmentCompletion(
+        completed: Boolean,
+        action: String?,
+        responseText: String,
+        data: ConversationData?,
+    ) {
+        if (!completed || !isAppointmentCompletionAction(action) || data == null) return
+
+        val appointment = mapToAppointmentDto(
+            data = data,
+            action = action!!,
+            responseText = responseText,
+        ) ?: return
+
+        _uiState.update {
+            it.copy(
+                appointmentConfirmation = appointment,
+                navigateToConfirmation = true,
+            )
+        }
+    }
+
+    private fun isAppointmentCompletionAction(action: String?): Boolean {
+        val normalized = action?.uppercase() ?: return false
+        return normalized in appointmentCompletionActions
+    }
+
+    private fun mapToAppointmentDto(
+        data: ConversationData,
+        action: String,
+        responseText: String,
+    ): AppointmentConfirmationDto? {
+        val confirmation = data.confirmation ?: return null
+
+        return AppointmentConfirmationDto(
+            appointmentId = data.appointment_id,
+            doctorName = confirmation.doctor.orEmpty(),
+            date = confirmation.fecha.orEmpty(),
+            clinicName = confirmation.institucion.orEmpty(),
+            address = confirmation.direccion.orEmpty(),
+            lat = confirmation.latitud ?: 0.0,
+            lon = confirmation.longitud ?: 0.0,
+            title = mapTitleForAction(action),
+            message = responseText,
+            responseText = responseText,
+            status = mapBackendStatus(confirmation.estado),
+        )
+    }
+
+    private fun mapToAppointmentDto(
+        data: JSONObject,
+        action: String,
+        responseText: String,
+    ): AppointmentConfirmationDto? {
         val confirmation = data.optJSONObject("confirmation") ?: return null
 
         return AppointmentConfirmationDto(
+            appointmentId = data.optString("appointment_id").takeIf { it.isNotBlank() },
             doctorName = confirmation.optString("doctor"),
             date = confirmation.optString("fecha"),
             clinicName = confirmation.optString("institucion"),
             address = confirmation.optString("direccion"),
             lat = confirmation.optDouble("latitud"),
             lon = confirmation.optDouble("longitud"),
-            status = confirmation.optString("estado").uppercase(),
-
-            title = "Cita agendada",
-            message = "Tu cita ha sido programada correctamente"
+            title = mapTitleForAction(action),
+            message = responseText,
+            responseText = responseText,
+            status = mapBackendStatus(confirmation.optString("estado")),
         )
+    }
+
+    private fun mapTitleForAction(action: String): String {
+        return when (action.uppercase()) {
+            "RESCHEDULE_APPOINTMENT", "REPROGRAM_APPOINTMENT" -> "Cita reprogramada"
+            else -> "Cita agendada"
+        }
+    }
+
+    private fun mapBackendStatus(rawStatus: String?): String {
+        return when (rawStatus?.trim()?.lowercase()) {
+            "pending" -> "PENDING"
+            "cancelled", "canceled" -> "CANCELLED"
+            else -> "SUCCESS"
+        }
+    }
+
+    fun onConfirmationNavigationHandled() {
+        _uiState.update { it.copy(navigateToConfirmation = false) }
     }
 
     fun sendTextByWebSocket(text: String) {

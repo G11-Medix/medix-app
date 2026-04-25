@@ -13,14 +13,17 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.medix.presentation.ui.components.common.PhoneNumberInput
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
 import androidx.compose.material3.minimumInteractiveComponentSize
 import com.example.medix.presentation.viewmodels.status.AuthUiState
@@ -31,12 +34,12 @@ fun LoginCard(
     viewModel: AuthViewModel
 ) {
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(28.dp),
         modifier = Modifier
             .fillMaxWidth()
             .widthIn(max = 400.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
 
@@ -45,12 +48,19 @@ fun LoginCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Icon(
-                imageVector = Icons.Default.Phone,
-                contentDescription = "Autenticación por teléfono",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(60.dp)
-            )
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Phone,
+                    contentDescription = "Autenticación por teléfono",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .padding(14.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -68,12 +78,12 @@ fun LoginCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            OutlinedTextField(
-                value = state.phone,
-                onValueChange = viewModel::updatePhone,
-                label = { Text("Teléfono") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+            PhoneNumberInput(
+                countryCode = state.phoneCountryCode,
+                phoneNumber = state.phone,
+                onCountryCodeChange = viewModel::updatePhoneCountryCode,
+                onPhoneNumberChange = viewModel::updatePhone,
+                label = "Teléfono",
             )
 
             if (state.otpSent) {
@@ -88,13 +98,22 @@ fun LoginCard(
                 )
             }
 
-            state.errorMessage?.let { error ->
+            state.errorMessage?.let {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            state.infoMessage?.let { info ->
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = info,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
 
@@ -112,7 +131,14 @@ fun LoginCard(
                     .fillMaxWidth()
                     .minimumInteractiveComponentSize()
             ) {
-                Text("Continuar")
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text("Continuar")
+                }
             }
         }
     }

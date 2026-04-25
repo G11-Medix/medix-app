@@ -3,6 +3,7 @@ package com.example.medix.presentation.viewmodels.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medix.core.auth.SessionManager
+import com.example.medix.data.dto.AppointmentConfirmationDto
 import com.example.medix.domain.repositories.VoiceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,12 @@ class ChatViewModel @Inject constructor(
     private val repository: VoiceRepository,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
+
+    private val appointmentCompletionActions = setOf(
+        "CREATE_APPOINTMENT",
+        "RESCHEDULE_APPOINTMENT",
+        "REPROGRAM_APPOINTMENT",
+    )
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
@@ -159,6 +166,8 @@ class ChatViewModel @Inject constructor(
                     optionIndex = optionIndex,
                 )
             }.onSuccess { response ->
+                val appointmentConfirmation = mapAppointmentCompletion(response)
+
                 val backendOptions = response.data?.options.orEmpty().map { option ->
                     ChatOptionUi(
                         id = option.id,
@@ -194,6 +203,8 @@ class ChatViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         errorMessage = null,
+                        appointmentConfirmation = appointmentConfirmation ?: it.appointmentConfirmation,
+                        navigateToConfirmation = appointmentConfirmation != null,
                     )
                 }
             }.onFailure {
@@ -315,6 +326,51 @@ class ChatViewModel @Inject constructor(
             .replace(Regex("""\s+"""), " ")
             .trim()
     }
+
+    private fun mapAppointmentCompletion(response: com.example.medix.data.dto.ConversationResponse): AppointmentConfirmationDto? {
+        if (!response.completed || !isAppointmentCompletionAction(response.action)) return null
+
+        val data = response.data ?: return null
+        val confirmation = data.confirmation ?: return null
+
+        return AppointmentConfirmationDto(
+            appointmentId = data.appointment_id,
+            doctorName = confirmation.doctor.orEmpty(),
+            date = confirmation.fecha.orEmpty(),
+            clinicName = confirmation.institucion.orEmpty(),
+            address = confirmation.direccion.orEmpty(),
+            lat = confirmation.latitud ?: 0.0,
+            lon = confirmation.longitud ?: 0.0,
+            title = mapTitleForAction(response.action.orEmpty()),
+            message = response.response,
+            responseText = response.response,
+            status = mapBackendStatus(confirmation.estado),
+        )
+    }
+
+    private fun isAppointmentCompletionAction(action: String?): Boolean {
+        val normalized = action?.uppercase() ?: return false
+        return normalized in appointmentCompletionActions
+    }
+
+    private fun mapTitleForAction(action: String): String {
+        return when (action.uppercase()) {
+            "RESCHEDULE_APPOINTMENT", "REPROGRAM_APPOINTMENT" -> "Cita reprogramada"
+            else -> "Cita agendada"
+        }
+    }
+
+    private fun mapBackendStatus(rawStatus: String?): String {
+        return when (rawStatus?.trim()?.lowercase()) {
+            "pending" -> "PENDING"
+            "cancelled", "canceled" -> "CANCELLED"
+            else -> "SUCCESS"
+        }
+    }
+
+    fun onConfirmationNavigationHandled() {
+        _uiState.update { it.copy(navigateToConfirmation = false) }
+    }
 }
 
 data class ChatUiState(
@@ -324,6 +380,8 @@ data class ChatUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val messages: List<ChatMessage> = emptyList(),
+    val appointmentConfirmation: AppointmentConfirmationDto? = null,
+    val navigateToConfirmation: Boolean = false,
 )
 
 data class ChatMessage(

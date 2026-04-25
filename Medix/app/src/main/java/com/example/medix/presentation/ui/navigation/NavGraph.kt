@@ -1,13 +1,18 @@
 package com.example.medix.presentation.ui.navigation
 
 import androidx.compose.runtime.*
+import androidx.navigation.NavController
 import androidx.navigation.compose.*
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.medix.data.dto.AppointmentConfirmationDto
 import com.example.medix.presentation.ui.screens.*
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
+import com.example.medix.presentation.viewmodels.chat.ChatViewModel
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
 import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
+
+private const val CONFIRMATION_PAYLOAD_KEY = "confirmation_payload"
 
 @Composable
 fun NavGraph() {
@@ -148,12 +153,26 @@ fun NavGraph() {
 
             composable(Screen.Voice.route) {
                 val viewModel: VoiceViewModel = hiltViewModel()
+                val state by viewModel.uiState.collectAsState()
+
+                LaunchedEffect(state.navigateToConfirmation, state.appointmentConfirmation) {
+                    val confirmation = state.appointmentConfirmation
+                    if (state.navigateToConfirmation && confirmation != null) {
+                        navigateToConfirmation(navController, confirmation)
+                        viewModel.onConfirmationNavigationHandled()
+                    }
+                }
 
                 VoiceScreen(
                     viewModel = viewModel,
                     onEndCall = {
                         if (viewModel.uiState.value.completed == true) {
-                            navController.navigateAndClear(Screen.Confirmation.route)
+                            val confirmation = viewModel.uiState.value.appointmentConfirmation
+                            if (confirmation != null) {
+                                navigateToConfirmation(navController, confirmation)
+                            } else {
+                                navController.navigateAndClear(Screen.Schedule.route)
+                            }
                         } else {
                             navController.navigateAndClear(Screen.Schedule.route)
                         }
@@ -162,7 +181,12 @@ fun NavGraph() {
             }
 
             composable(Screen.Confirmation.route) {
+                val payload = navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<AppointmentConfirmationDto>(CONFIRMATION_PAYLOAD_KEY)
+
                 ConfirmationScreen(
+                    appointment = payload,
                     onDone = {
                         navController.navigateAndClear(Screen.Schedule.route)
                     }
@@ -208,8 +232,20 @@ fun NavGraph() {
             }
 
             composable(Screen.Chat.route) {
+                val viewModel: ChatViewModel = hiltViewModel()
+                val state by viewModel.uiState.collectAsState()
+
+                LaunchedEffect(state.navigateToConfirmation, state.appointmentConfirmation) {
+                    val confirmation = state.appointmentConfirmation
+                    if (state.navigateToConfirmation && confirmation != null) {
+                        navigateToConfirmation(navController, confirmation)
+                        viewModel.onConfirmationNavigationHandled()
+                    }
+                }
+
                 ChatScreen(
                     currentRoute = Screen.Chat.route,
+                    viewModel = viewModel,
                     onNavigate = { route ->
                         navController.navigateSingleTop(route)
                     }
@@ -217,4 +253,15 @@ fun NavGraph() {
             }
         }
     }
+}
+
+private fun navigateToConfirmation(
+    navController: NavController,
+    confirmation: AppointmentConfirmationDto,
+) {
+    navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.set(CONFIRMATION_PAYLOAD_KEY, confirmation)
+
+    navController.navigateSingleTop(Screen.Confirmation.route)
 }

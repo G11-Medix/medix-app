@@ -1,19 +1,26 @@
 package com.example.medix.presentation.ui.components.voice
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
+    val content = remember(text) { parseAssistantVoiceResponse(text) }
 
     Card(
         shape = RoundedCornerShape(30.dp),
@@ -30,37 +37,104 @@ fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .verticalScroll(rememberScrollState())
             ) {
-                Text(
-                    text = formatTranscript(text),
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
-                )
+                when (content) {
+                    is AssistantVoiceContent.PlainText -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text(
+                                text = content.text,
+                                fontSize = 16.sp,
+                                lineHeight = 22.sp,
+                            )
+                        }
+                    }
+
+                    is AssistantVoiceContent.NumberedOptions -> {
+                        NumberedOptionsContent(content = content)
+                    }
+                }
             }
         }
     }
 }
 
-fun formatTranscript(text: String): String {
-    var formatted = text.trim()
+@Composable
+private fun NumberedOptionsContent(content: AssistantVoiceContent.NumberedOptions) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = content.title.trimEnd(':') + ":",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
 
-    // Salto después de ":" si viene contenido
-    formatted = formatted.replace(Regex(":\\s*"), ":\n")
+        Spacer(modifier = Modifier.height(10.dp))
 
-    //Listas numeradas → salto antes de "1. 2. 3."
-    formatted = formatted.replace(Regex("(\\d+)\\.\\s"), "\n$1. ")
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 220.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                )
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(content.options, key = { it.number }) { option ->
+                OptionRow(option)
+            }
 
-    //  Fechas tipo 2026-04-05 → cada una en línea nueva
-    formatted = formatted.replace(Regex("(\\d{4}-\\d{2}-\\d{2})"), "\n$1")
+            if (!content.footer.isNullOrBlank()) {
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = content.footer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 20.sp,
+                    )
+                }
+            }
+        }
+    }
+}
 
-    // uitar saltos duplicados
-    formatted = formatted.replace(Regex("\n+"), "\n")
+@Composable
+private fun OptionRow(option: OptionItem) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    shape = CircleShape,
+                ),
+            contentAlignment = androidx.compose.ui.Alignment.Center,
+        ) {
+            Text(
+                text = option.number.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+            )
+        }
 
-    return formatted.trim()
+        Text(
+            text = option.label,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            lineHeight = 20.sp,
+        )
+    }
 }

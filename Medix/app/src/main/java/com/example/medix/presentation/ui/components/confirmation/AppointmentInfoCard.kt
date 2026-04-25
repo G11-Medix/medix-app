@@ -11,10 +11,7 @@ import androidx.compose.runtime.Composable
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.medix.core.utils.DateUtils
 import com.example.medix.data.dto.AppointmentConfirmationDto
 
@@ -40,6 +37,22 @@ fun AppointmentInfoCard(data: AppointmentConfirmationDto) {
                 DateUtils.formatAppointmentDateConfirmation(data.date),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
+            )
+
+            data.appointmentId?.let { appointmentId ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "ID cita: $appointmentId",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Estado: ${data.status}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(modifier = Modifier.height(8.dp))

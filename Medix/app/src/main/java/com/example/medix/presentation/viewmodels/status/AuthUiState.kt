@@ -4,6 +4,7 @@ import com.example.medix.data.dto.EpsDto
 
 data class AuthUiState(
     val phone: String = "",
+    val phoneCountryCode: String = "+57",
     val otpCode: String = "",
     val otpSent: Boolean = false,
     val isLoading: Boolean = false,

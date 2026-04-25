@@ -1,6 +1,9 @@
 package com.example.medix.data.dto
 
+import java.io.Serializable
+
 data class AppointmentConfirmationDto(
+    val appointmentId: String? = null,
     val doctorName: String,
     val date: String,
     val clinicName: String,
@@ -9,8 +12,9 @@ data class AppointmentConfirmationDto(
     val lon: Double,
     val title: String,
     val message: String,
+    val responseText: String,
     val status: String // "SUCCESS", "PENDING", "CANCELLED"
-)
+) : Serializable
 
 /*
 

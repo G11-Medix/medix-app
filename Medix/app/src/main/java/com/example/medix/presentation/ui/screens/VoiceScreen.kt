@@ -87,27 +87,22 @@ fun VoiceScreen(
                 }
 
                 // 🔹 RIGHT SIDE
-                Box(
-                    modifier = Modifier.weight(1f)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        TranscriptCard(
-                            "Asistente Medix:",
-                            state.assistantText,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
-                    }
-
-                    Column(
+                    TranscriptCard(
+                        "Asistente Medix:",
+                        state.assistantText,
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .navigationBarsPadding()
-                            .padding(bottom = 12.dp),
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+
+                    Column(
+                        modifier = Modifier.navigationBarsPadding(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CallControls(
@@ -136,43 +131,34 @@ fun VoiceScreen(
 
         } else {
             // 🔹 PORTRAIT
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                Column(
+                Spacer(Modifier.height(6.dp))
+
+                ActiveSessionHeader(state.status)
+
+                Spacer(Modifier.height(6.dp))
+
+                AudioVisualizer(state.status)
+
+                Spacer(Modifier.height(6.dp))
+
+                TranscriptCard(
+                    "Asistente Medix:",
+                    state.assistantText,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .align(Alignment.TopCenter),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    Spacer(Modifier.height(16.dp))
-
-                    ActiveSessionHeader(state.status)
-
-                    Spacer(Modifier.height(10.dp))
-
-                    AudioVisualizer(state.status)
-
-                    Spacer(Modifier.height(16.dp))
-
-                    TranscriptCard(
-                        "Asistente Medix:",
-                        state.assistantText,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
-                }
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
 
                 Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(bottom = 12.dp),
+                    modifier = Modifier.navigationBarsPadding(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 

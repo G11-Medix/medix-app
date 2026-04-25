@@ -12,13 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.medix.data.dto.AppointmentConfirmationDto
 import com.example.medix.presentation.ui.components.confirmation.*
-import androidx.hilt.navigation.compose.hiltViewModel
 import android.content.res.Configuration
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 
 
 fun getAuthorizationMessage(especialidad: String?): String? {
@@ -36,12 +35,9 @@ fun getAuthorizationMessage(especialidad: String?): String? {
 
 @Composable
 fun ConfirmationScreen(
+    appointment: AppointmentConfirmationDto?,
     onDone: () -> Unit
 ) {
-    val viewModel: VoiceViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsState()
-
-    val appointment = uiState.appointmentConfirmation
 
     val configuration = LocalConfiguration.current
     val isLandscape =
@@ -77,7 +73,11 @@ fun ConfirmationScreen(
                     Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    Text(
+                        text = "No se encontró la confirmación de la cita.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
 
             } else {

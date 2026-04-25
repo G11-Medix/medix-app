@@ -13,5 +13,6 @@ data class VoiceUiState(
     val completed: Boolean = false,
     val wsConnected: Boolean = false,
     val errorMessage: String? = null,
-    val appointmentConfirmation: AppointmentConfirmationDto? = null
+    val appointmentConfirmation: AppointmentConfirmationDto? = null,
+    val navigateToConfirmation: Boolean = false,
 )
