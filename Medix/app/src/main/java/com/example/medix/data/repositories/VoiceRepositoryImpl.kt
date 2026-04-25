@@ -1,12 +1,12 @@
 package com.example.medix.data.repositories
 
 import android.util.Log
-import com.example.medix.core.auth.SessionManager
 import com.example.medix.core.network.ApiService
 import com.example.medix.core.network.WebSocketClient
 import com.example.medix.core.utils.Constants
 import com.example.medix.data.dto.ConversationRequest
 import com.example.medix.data.dto.ConversationResponse
+import com.example.medix.data.dto.ConversationUserContext
 import com.example.medix.domain.repositories.VoiceRepository
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -50,6 +50,38 @@ class VoiceRepositoryImpl(
             response
         } catch (e: Exception) {
             Log.e("VoiceRepository", "Conversation request failed", e)
+            throw e
+        }
+    }
+
+    override suspend fun sendChatConversationMessage(
+        text: String,
+        sessionId: String,
+        pacienteId: Long,
+        optionId: String?,
+        optionIndex: Int?,
+    ): ConversationResponse {
+        Log.d(
+            "VoiceRepository",
+            "Chat request body => session_id=$sessionId, text='$text', option_id=$optionId, option_index=$optionIndex, user_context.id_paciente=$pacienteId, user_context.is_authenticated=true"
+        )
+        val request = ConversationRequest(
+            text = text,
+            session_id = sessionId,
+            user_context = ConversationUserContext(
+                id_paciente = pacienteId,
+                is_authenticated = true,
+            ),
+            option_id = optionId,
+            option_index = optionIndex,
+        )
+
+        return try {
+            val response = apiService.sendChatMessage(request)
+            Log.i("VoiceRepository", "Chat response: '${response.response.take(50)}...', completed: ${response.completed}")
+            response
+        } catch (e: Exception) {
+            Log.e("VoiceRepository", "Chat request failed", e)
             throw e
         }
     }

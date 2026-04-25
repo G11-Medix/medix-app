@@ -16,6 +16,11 @@ interface ApiService {
         @Body request: ConversationRequest,
     ): ConversationResponse
 
+    @POST("/chat/conversation")
+    suspend fun sendChatMessage(
+        @Body request: ConversationRequest,
+    ): ConversationResponse
+
     @Multipart
     @POST("/asr/transcribe")
     suspend fun transcribeAudio(

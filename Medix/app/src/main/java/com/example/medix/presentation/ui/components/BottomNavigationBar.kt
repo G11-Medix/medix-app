@@ -1,10 +1,12 @@
 package com.example.medix.presentation.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.example.medix.presentation.ui.navigation.Screen
 
 @Composable
 fun BottomNavigationBar(
@@ -15,8 +17,8 @@ fun BottomNavigationBar(
     NavigationBar(modifier = modifier) {
 
         NavigationBarItem(
-            selected = currentRoute == "schedule",
-            onClick = { onNavigate("schedule") },
+            selected = currentRoute == Screen.Schedule.route,
+            onClick = { onNavigate(Screen.Schedule.route) },
             icon = {
                 Icon(Icons.Default.Home, contentDescription = "Agendar")
             },
@@ -24,8 +26,8 @@ fun BottomNavigationBar(
         )
 
         NavigationBarItem(
-            selected = currentRoute == "records",
-            onClick = { onNavigate("records") },
+            selected = currentRoute == Screen.Records.route,
+            onClick = { onNavigate(Screen.Records.route) },
             icon = {
                 Icon(Icons.Default.History, contentDescription = "Registros")
             },
@@ -33,8 +35,8 @@ fun BottomNavigationBar(
         )
 
         NavigationBarItem(
-            selected = currentRoute == "profile",
-            onClick = { onNavigate("profile") },
+            selected = currentRoute == Screen.Profile.route,
+            onClick = { onNavigate(Screen.Profile.route) },
             icon = {
                 Icon(Icons.Default.Person, contentDescription = "Perfil")
             },
@@ -42,10 +44,10 @@ fun BottomNavigationBar(
         )
 
         NavigationBarItem(
-            selected = currentRoute == "chat",
-            onClick = { onNavigate("chat") },
+            selected = currentRoute == Screen.Chat.route,
+            onClick = { onNavigate(Screen.Chat.route) },
             icon = {
-                Icon(Icons.Default.Chat, contentDescription = "Chat")
+                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Chat")
             },
             label = { Text("Chat") }
         )

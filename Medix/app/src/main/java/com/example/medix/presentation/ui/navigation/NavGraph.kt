@@ -5,7 +5,6 @@ import androidx.navigation.compose.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medix.presentation.ui.screens.*
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
-import com.example.medix.presentation.viewmodels.auth.ConsentViewModel
 import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
 import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
 import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
@@ -204,6 +203,15 @@ fun NavGraph() {
                         profileViewModel.logout()
                         authViewModel.resetAuthState()
                         navController.navigateAndClear(Screen.Login.route)
+                    }
+                )
+            }
+
+            composable(Screen.Chat.route) {
+                ChatScreen(
+                    currentRoute = Screen.Chat.route,
+                    onNavigate = { route ->
+                        navController.navigateSingleTop(route)
                     }
                 )
             }

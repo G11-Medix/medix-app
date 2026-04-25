@@ -12,6 +12,14 @@ interface VoiceRepository {
         sessionId: String
     ): ConversationResponse
 
+    suspend fun sendChatConversationMessage(
+        text: String,
+        sessionId: String,
+        pacienteId: Long,
+        optionId: String? = null,
+        optionIndex: Int? = null,
+    ): ConversationResponse
+
     fun connectWebSocket(
         sessionId: String,
         onMessage: (String) -> Unit,
