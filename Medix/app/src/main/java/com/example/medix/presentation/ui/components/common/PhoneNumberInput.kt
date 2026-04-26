@@ -1,23 +1,10 @@
 package com.example.medix.presentation.ui.components.common
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,21 +20,43 @@ fun PhoneNumberInput(
     label: String,
 ) {
     var expanded by remember { mutableStateOf(false) }
+
     val countries = CountryDialCodes.all
     val selectedCountry = CountryDialCodes.findByDialCode(countryCode)
         ?: countries.first { it.dialCode == CountryDialCodes.DEFAULT_DIAL_CODE }
 
-    Row(modifier = modifier.fillMaxWidth()) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        // 🔥 BOTÓN COMPACTO
         Box {
-            OutlinedButton(onClick = { expanded = true }) {
-                Text("${selectedCountry.flagEmoji} ${selectedCountry.dialCode}")
+            OutlinedButton(
+                onClick = { expanded = true },
+                contentPadding = PaddingValues(
+                    horizontal = 8.dp,  // 👈 menos espacio lateral
+                    vertical = 4.dp     // 👈 menos altura interna
+                ),
+                modifier = Modifier.height(56.dp) // 👈 igual altura que TextField
+            ) {
+                Text(
+                    text = "${selectedCountry.flagEmoji} ${selectedCountry.dialCode}",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Seleccionar codigo de pais",
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp) // 👈 icono más pequeño
                 )
             }
 
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
                 countries.forEach { country ->
                     DropdownMenuItem(
                         text = {
@@ -66,10 +75,11 @@ fun PhoneNumberInput(
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
+        // 📱 CAMPO TELÉFONO (más espacio)
         OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f) // 👈 ocupa todo el espacio restante
+                .height(56.dp),
             value = phoneNumber,
             onValueChange = { input ->
                 onPhoneNumberChange(input.filter(Char::isDigit))
@@ -79,4 +89,3 @@ fun PhoneNumberInput(
         )
     }
 }
-

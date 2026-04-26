@@ -88,7 +88,7 @@ fun LoginCard(
             Spacer(modifier = Modifier.height(subtitleSpacing))
 
             Text(
-                text = "Ingresa el teléfono autorizado del paciente.",
+                text = "Inicie sesión o registrese con el teléfono del paciente.",
                 style = MaterialTheme.typography.bodyMedium
             )
 

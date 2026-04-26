@@ -12,22 +12,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.medix.R
-import com.example.medix.presentation.viewmodels.auth.AuthViewModel
 import com.example.medix.presentation.ui.components.login.LoginCard
+import com.example.medix.presentation.viewmodels.auth.AuthViewModel
 
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit, // 👈 ya no se usa
-    onNavigateToRegister: () -> Unit, // 👈 ya no se usa
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -38,39 +38,62 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.22f))
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.iniciarapp_medix),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(layoutSpec.backgroundHeightFactor)
-                .align(Alignment.TopCenter)
-                .offset(y = layoutSpec.backgroundOffsetY),
-            contentScale = ContentScale.Crop,
-            alignment = Alignment.TopCenter
-        )
+        if (isLandscape) {
+            Image(
+                painter = painterResource(id = R.drawable.iniciarapp_medix),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.62f)
+                    .align(Alignment.CenterStart),
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.TopStart
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.iniciarapp_medix),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .align(Alignment.Center),
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.TopCenter
+            )
+        }
 
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = layoutSpec.overlayAlpha))
+                .background(
+                    MaterialTheme.colorScheme.background.copy(
+                        alpha = layoutSpec.overlayAlpha
+                    )
+                )
         )
 
         if (isLandscape) {
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = layoutSpec.horizontalPadding, vertical = layoutSpec.verticalPadding),
-                contentAlignment = Alignment.CenterEnd
+                    .padding(
+                        horizontal = layoutSpec.horizontalPadding,
+                        vertical = layoutSpec.verticalPadding
+                    ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(0.48f)
+                )
+
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .fillMaxWidth(if (layoutSpec.isExpanded) 0.5f else 0.58f),
-                    contentAlignment = Alignment.CenterEnd
+                        .weight(0.52f),
+                    contentAlignment = Alignment.Center
                 ) {
                     if (layoutSpec.enableLandscapeCardScroll) {
                         Column(
@@ -80,14 +103,12 @@ fun LoginScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Spacer(modifier = Modifier.height(8.dp))
                             LoginCard(
                                 state = state,
                                 viewModel = viewModel,
                                 maxWidth = layoutSpec.cardMaxWidth,
                                 compactMode = layoutSpec.compactLandscapeMode,
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     } else {
                         LoginCard(
@@ -99,12 +120,14 @@ fun LoginScreen(
                     }
                 }
             }
-
         } else {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = layoutSpec.horizontalPadding, vertical = layoutSpec.verticalPadding),
+                    .padding(
+                        horizontal = layoutSpec.horizontalPadding,
+                        vertical = layoutSpec.verticalPadding
+                    ),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Box(
@@ -133,8 +156,6 @@ private data class LoginLayoutSpec(
     val containerMaxWidth: Dp,
     val cardMaxWidth: Dp,
     val cardBottomPadding: Dp,
-    val backgroundOffsetY: Dp,
-    val backgroundHeightFactor: Float,
     val overlayAlpha: Float,
     val compactLandscapeMode: Boolean,
     val enableLandscapeCardScroll: Boolean,
@@ -146,8 +167,15 @@ private fun rememberLoginLayoutSpec(
 ): LoginLayoutSpec {
     val density = LocalDensity.current
     val containerSize = LocalWindowInfo.current.containerSize
-    val widthDp = with(density) { containerSize.width.toDp().value.toInt() }
-    val heightDp = with(density) { containerSize.height.toDp().value.toInt() }
+
+    val widthDp = with(density) {
+        containerSize.width.toDp().value.toInt()
+    }
+
+    val heightDp = with(density) {
+        containerSize.height.toDp().value.toInt()
+    }
+
     val isCompact = widthDp < 360
     val isExpanded = widthDp >= 840
     val isMedium = !isCompact && !isExpanded
@@ -155,21 +183,21 @@ private fun rememberLoginLayoutSpec(
     val isVeryShort = heightDp < 600
 
     val horizontalPadding = when {
-        isExpanded -> 40.dp
-        isMedium -> 22.dp
-        else -> 14.dp
+        isExpanded -> 36.dp
+        isMedium -> 20.dp
+        else -> 10.dp
     }
 
     val verticalPadding = when {
-        isLandscape -> 16.dp
+        isLandscape -> 10.dp
         isShort -> 12.dp
         else -> 24.dp
     }
 
     val cardMaxWidth = when {
-        isExpanded -> 500.dp
-        isMedium -> 420.dp
-        else -> 360.dp
+        isExpanded -> 460.dp
+        isMedium -> 410.dp
+        else -> 380.dp
     }
 
     val containerMaxWidth = when {
@@ -184,13 +212,9 @@ private fun rememberLoginLayoutSpec(
         else -> 14.dp
     }
 
-    val backgroundOffsetY = if (isLandscape) (-28).dp else 0.dp
-
-    val backgroundHeightFactor = if (isLandscape) 1.22f else 1f
-
     val overlayAlpha = when {
-        isLandscape -> 0.16f
-        isShort -> 0.2f
+        isLandscape -> 0.04f
+        isShort -> 0.18f
         else -> 0.14f
     }
 
@@ -204,8 +228,6 @@ private fun rememberLoginLayoutSpec(
         containerMaxWidth = containerMaxWidth,
         cardMaxWidth = cardMaxWidth,
         cardBottomPadding = cardBottomPadding,
-        backgroundOffsetY = backgroundOffsetY,
-        backgroundHeightFactor = backgroundHeightFactor,
         overlayAlpha = overlayAlpha,
         compactLandscapeMode = compactLandscapeMode,
         enableLandscapeCardScroll = enableLandscapeCardScroll,
