@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.medix.presentation.ui.components.common.PhoneNumberInput
 import com.example.medix.presentation.viewmodels.auth.AuthViewModel
@@ -31,25 +32,40 @@ import com.example.medix.presentation.viewmodels.status.AuthUiState
 @Composable
 fun LoginCard(
     state: AuthUiState,
-    viewModel: AuthViewModel
+    viewModel: AuthViewModel,
+    maxWidth: Dp = 400.dp,
+    compactMode: Boolean = false,
 ) {
+    val cardCorner = if (compactMode) 24.dp else 28.dp
+    val contentPadding = if (compactMode) 16.dp else 24.dp
+    val phoneIconContainerCorner = if (compactMode) 16.dp else 20.dp
+    val phoneIconSize = if (compactMode) 52.dp else 64.dp
+    val phoneIconPadding = if (compactMode) 10.dp else 14.dp
+    val topSpacing = if (compactMode) 12.dp else 20.dp
+    val subtitleSpacing = if (compactMode) 6.dp else 8.dp
+    val formSpacing = if (compactMode) 16.dp else 24.dp
+    val otpSpacing = if (compactMode) 10.dp else 16.dp
+    val messageSpacing = if (compactMode) 8.dp else 12.dp
+    val infoSpacing = if (compactMode) 6.dp else 10.dp
+    val buttonTopSpacing = if (compactMode) 14.dp else 20.dp
+
     Card(
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(cardCorner),
         modifier = Modifier
             .fillMaxWidth()
-            .widthIn(max = 400.dp),
+            .widthIn(max = maxWidth),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
 
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Surface(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(phoneIconContainerCorner),
                 color = MaterialTheme.colorScheme.primaryContainer,
             ) {
                 Icon(
@@ -57,26 +73,26 @@ fun LoginCard(
                     contentDescription = "Autenticación por teléfono",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .size(64.dp)
-                        .padding(14.dp)
+                        .size(phoneIconSize)
+                        .padding(phoneIconPadding)
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(topSpacing))
 
             Text(
                 text = "Autenticación por SMS",
-                style = MaterialTheme.typography.titleLarge
+                style = if (compactMode) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(subtitleSpacing))
 
             Text(
                 text = "Ingresa el teléfono autorizado del paciente.",
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(formSpacing))
 
             PhoneNumberInput(
                 countryCode = state.phoneCountryCode,
@@ -87,7 +103,7 @@ fun LoginCard(
             )
 
             if (state.otpSent) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(otpSpacing))
 
                 OutlinedTextField(
                     value = state.otpCode,
@@ -99,7 +115,7 @@ fun LoginCard(
             }
 
             state.errorMessage?.let {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(messageSpacing))
 
                 Text(
                     text = "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
@@ -109,7 +125,7 @@ fun LoginCard(
             }
 
             state.infoMessage?.let { info ->
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(infoSpacing))
                 Text(
                     text = info,
                     style = MaterialTheme.typography.bodySmall,
@@ -117,7 +133,7 @@ fun LoginCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(buttonTopSpacing))
 
             Button(
                 onClick = {
