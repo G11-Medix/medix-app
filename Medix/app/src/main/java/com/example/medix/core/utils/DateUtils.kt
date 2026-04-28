@@ -84,4 +84,11 @@ object DateUtils {
             "$fecha $hora"
         }
     }
+
+    fun formatTimestamp(timestamp: Long): String {
+        val formatter = DateTimeFormatter.ofPattern("dd MMM, hh:mm a")
+        return Instant.ofEpochMilli(timestamp)
+            .atZone(ZoneId.systemDefault())
+            .format(formatter)
+    }
 }

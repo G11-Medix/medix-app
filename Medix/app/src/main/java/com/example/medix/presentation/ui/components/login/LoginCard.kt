@@ -81,7 +81,7 @@ fun LoginCard(
             Spacer(modifier = Modifier.height(topSpacing))
 
             Text(
-                text = "Autenticación por SMS",
+                text = "Autenticación por Whatsapp",
                 style = if (compactMode) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge
             )
 

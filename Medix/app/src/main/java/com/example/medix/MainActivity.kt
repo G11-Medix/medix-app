@@ -14,7 +14,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         Configuration.getInstance().load(
             applicationContext,
             getSharedPreferences("osm", MODE_PRIVATE)
