@@ -15,10 +15,10 @@ import com.example.medix.services.AudioPlayer
 import com.example.medix.services.AudioRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.util.ArrayDeque
 import java.io.File
 import javax.inject.Inject
 
@@ -46,6 +46,7 @@ class VoiceViewModel @Inject constructor(
     private var isProcessingAudio = false
     private var isRecordingPressActive = false
     private var wsReadyForSession = false
+    private val pendingMessages = ArrayDeque<String>()
 
     private val appointmentCompletionActions = setOf(
         "CREATE_APPOINTMENT",
@@ -71,18 +72,7 @@ class VoiceViewModel @Inject constructor(
     }
 
     fun startSchedulingSession(prompt: String) {
-        if (uiState.value.wsConnected && wsReadyForSession) {
-            sendTextByWebSocket(prompt)
-        } else {
-            viewModelScope.launch {
-                delay(500)
-                if (uiState.value.wsConnected && wsReadyForSession) {
-                    sendTextByWebSocket(prompt)
-                } else {
-                    sendTextMessage(prompt)
-                }
-            }
-        }
+        queueOrSendMessage(prompt)
     }
 
     // RECORDING
@@ -130,34 +120,8 @@ class VoiceViewModel @Inject constructor(
                 val text = repository.transcribeAudio(audioFile)
 
                 if (text.isBlank()) error("Empty transcription")
-
-                setUserText(text)
-
-                val sentByWs = if (_uiState.value.wsConnected) {
-                    repository.sendWebSocketMessage(text, _uiState.value.sessionId)
-                } else false
-
-                if (sentByWs) {
-                    _uiState.update {
-                        it.copy(
-                            status = ConversationStatus.RESPONDING,
-                            isLoading = true
-                        )
-                    }
-                    null
-                } else {
-                    repository.sendConversationMessage(text, _uiState.value.sessionId)
-                }
-            }.onSuccess { response ->
-                response?.let {
-                    handleAppointmentCompletion(
-                        completed = it.completed,
-                        action = it.action,
-                        responseText = it.response,
-                        data = it.data,
-                    )
-                    updateAssistantResponse(it.response, it.completed, it.audio_base64)
-                }
+                sendTextByWebSocket(text)
+            }.onSuccess {
             }.onFailure {
                 showError("Error procesando audio")
             }
@@ -166,38 +130,10 @@ class VoiceViewModel @Inject constructor(
         }
     }
 
-    private fun setUserText(text: String) {
-        _uiState.update { it.copy(userText = text) }
-    }
-
     // TEXT
 
     fun sendTextMessage(text: String) {
-        if (text.isBlank()) return
-
-        _uiState.update {
-            it.copy(
-                userText = text,
-                status = ConversationStatus.PROCESSING,
-                isLoading = true,
-            )
-        }
-
-        viewModelScope.launch {
-            runCatching {
-                repository.sendConversationMessage(text, _uiState.value.sessionId)
-            }.onSuccess {
-                handleAppointmentCompletion(
-                    completed = it.completed,
-                    action = it.action,
-                    responseText = it.response,
-                    data = it.data,
-                )
-                updateAssistantResponse(it.response, it.completed, it.audio_base64)
-            }.onFailure {
-                showError("Error enviando texto")
-            }
-        }
+        queueOrSendMessage(text)
     }
 
     // WEBSOCKET
@@ -209,7 +145,9 @@ class VoiceViewModel @Inject constructor(
                 onMessage = { handleWebSocketPayload(it) },
                 onStateChanged = { connected ->
                     _uiState.update { it.copy(wsConnected = connected) }
-                    wsReadyForSession = connected
+                    if (!connected) {
+                        wsReadyForSession = false
+                    }
                 }
             )
         }
@@ -218,6 +156,12 @@ class VoiceViewModel @Inject constructor(
     private fun handleWebSocketPayload(payload: String) {
         runCatching {
             val json = JSONObject(payload)
+            val type = json.optString("type")
+            if (type.equals("init_ack", ignoreCase = true)) {
+                val authenticated = json.optBoolean("authenticated", false)
+                handleInitAck(authenticated)
+                return
+            }
 
             val response = json.optString("response")
             val state = json.optString("state")
@@ -359,14 +303,27 @@ class VoiceViewModel @Inject constructor(
     }
 
     fun sendTextByWebSocket(text: String) {
+        queueOrSendMessage(text)
+    }
+
+    private fun queueOrSendMessage(text: String) {
         if (text.isBlank()) return
 
-        val sent = if (_uiState.value.wsConnected) {
-            repository.sendWebSocketMessage(text, _uiState.value.sessionId)
-        } else false
+        if (!canSendMessages()) {
+            pendingMessages.addLast(text)
+            _uiState.update {
+                it.copy(
+                    userText = text,
+                    status = ConversationStatus.PROCESSING,
+                    isLoading = true,
+                )
+            }
+            return
+        }
 
+        val sent = repository.sendWebSocketMessage(text, _uiState.value.sessionId)
         if (!sent) {
-            sendTextMessage(text)
+            pendingMessages.addLast(text)
             return
         }
 
@@ -377,6 +334,37 @@ class VoiceViewModel @Inject constructor(
                 isLoading = true,
             )
         }
+    }
+
+    private fun handleInitAck(authenticated: Boolean) {
+        wsReadyForSession = authenticated
+        if (!authenticated) {
+            showError("No se pudo autenticar la sesion por WebSocket")
+            return
+        }
+        flushPendingMessages()
+    }
+
+    private fun flushPendingMessages() {
+        while (pendingMessages.isNotEmpty() && canSendMessages()) {
+            val next = pendingMessages.removeFirst()
+            val sent = repository.sendWebSocketMessage(next, _uiState.value.sessionId)
+            if (!sent) {
+                pendingMessages.addFirst(next)
+                return
+            }
+            _uiState.update {
+                it.copy(
+                    userText = next,
+                    status = ConversationStatus.PROCESSING,
+                    isLoading = true,
+                )
+            }
+        }
+    }
+
+    private fun canSendMessages(): Boolean {
+        return _uiState.value.wsConnected && wsReadyForSession
     }
 
     fun toggleMute() {
