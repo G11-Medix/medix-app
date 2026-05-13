@@ -20,9 +20,9 @@ fun BottomNavigationBar(
             selected = currentRoute == Screen.Schedule.route,
             onClick = { onNavigate(Screen.Schedule.route) },
             icon = {
-                Icon(Icons.Default.Home, contentDescription = "Agendar")
+                Icon(Icons.Default.Home, contentDescription = "Asistente")
             },
-            label = { Text("Agendar") }
+            label = { Text("Asistente") }
         )
 
         NavigationBarItem(

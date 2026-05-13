@@ -37,7 +37,7 @@ fun PastAppointmentCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // 🔥 Imagen circular (igual que AppointmentCard)
+
             AsyncImage(
                 model = logo_url,
                 contentDescription = "Logo",
@@ -79,13 +79,13 @@ fun PastAppointmentCard(
                 }
             }
 
-            // 🔥 Estado (igual que la otra card)
+            val visualState = getVisualState(state, isPast = true)
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = getStateColor(state).copy(alpha = 0.7f) // más suave
+                color = getStateColor(visualState).copy(alpha = 0.7f) // más suave
             ) {
                 Text(
-                    text = formatState(state),
+                    text = formatState(visualState),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White
