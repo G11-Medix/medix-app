@@ -65,7 +65,7 @@ fun VoiceCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Empezar agendamiento de cita",
+                text = "Iniciar asistente de voz",
                 color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.titleMedium
             )
