@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.services)
 }
 
 fun String.toBuildConfigString(): String =
@@ -92,6 +93,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
 
     implementation(libs.androidx.compose.material3)
+    // Add classic Material dependency to use SwipeToDismiss and other helpers
+    implementation("androidx.compose.material:material:1.5.0")
     implementation(libs.androidx.compose.material.icons.extended)
 
     implementation("androidx.navigation:navigation-compose:2.7.7")
@@ -108,6 +111,16 @@ dependencies {
     implementation(libs.ktor.client.android)
 
     implementation("org.osmdroid:osmdroid-android:6.1.18")
+
+    implementation("com.google.firebase:firebase-messaging:23.4.0")
+
+    // Room (Actualizado para compatibilidad con Kotlin 2.2.10)
+    val room_version = "2.7.0-alpha01"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+    implementation(libs.core.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

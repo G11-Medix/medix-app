@@ -28,7 +28,6 @@ import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
 import com.example.medix.data.dto.UserProfileDto
 import com.example.medix.presentation.ui.components.profile.ProfileHeader
 import com.example.medix.presentation.ui.components.profile.ProfileInfo
-
 @Composable
 fun ProfileScreen(
     currentRoute: String,
@@ -38,6 +37,7 @@ fun ProfileScreen(
 
     val viewModel: ProfileViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
+
 
     val configuration = LocalConfiguration.current
     val isLandscape =

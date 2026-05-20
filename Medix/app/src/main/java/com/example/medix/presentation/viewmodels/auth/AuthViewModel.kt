@@ -7,7 +7,9 @@ import com.example.medix.core.auth.SessionManager
 import com.example.medix.core.phone.CountryDialCodes
 import com.example.medix.data.dto.CreatePacienteRequest
 import com.example.medix.data.dto.EpsDto
+import com.example.medix.data.sources.local.TokenDataStore
 import com.example.medix.domain.repositories.AuthRepository
+import com.example.medix.domain.repositories.DeviceRepository
 import com.example.medix.domain.repositories.LegalRepository
 import com.example.medix.domain.repositories.PacienteRepository
 import com.example.medix.presentation.viewmodels.status.AuthNavigationTarget
@@ -17,6 +19,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,7 +28,9 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val pacienteRepository: PacienteRepository,
     private val legalRepository: LegalRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val tokenStorage: TokenDataStore,
+    private val deviceRepository: DeviceRepository
 ) : ViewModel() {
     companion object {
         private const val TAG = "AuthViewModel"
@@ -204,9 +209,9 @@ class AuthViewModel @Inject constructor(
                         pacienteForm = it.pacienteForm.copy(telefono = nationalNumber),
                         otpSent = true,
                         infoMessage = if (isResend) {
-                            "Te reenviamos el código por SMS."
+                            "Te reenviamos el código por Whatsapp."
                         } else {
-                            "Te enviamos un codigo por SMS."
+                            "Te enviamos un codigo por Whatsapp."
                         },
                         isLoading = false,
                     )
@@ -258,6 +263,9 @@ class AuthViewModel @Inject constructor(
                     refreshToken = authRepository.currentRefreshToken(),
                     pacienteId = pacienteId
                 )
+                syncDeviceToken()
+
+
 
             }.onSuccess {
                 val consentAccepted = legalRepository.hasAcceptedLatest()
@@ -335,6 +343,7 @@ class AuthViewModel @Inject constructor(
                         refreshToken = authRepository.currentRefreshToken(),
                         pacienteId = pacienteResponse.idPaciente
                     )
+                    syncDeviceToken()
 
                     RegistrationResult.PacienteCreated
                 }
@@ -452,6 +461,22 @@ class AuthViewModel @Inject constructor(
 
     private fun splitInternationalPhone(phone: String): Pair<String, String> {
         return CountryDialCodes.matchByInternationalPhone(phone)
+    }
+
+    private fun syncDeviceToken() {
+        viewModelScope.launch {
+            try {
+                val token = tokenStorage.getToken().firstOrNull() ?: return@launch
+                runCatching {
+                    deviceRepository.sendFcmToken(token)
+                }.onFailure { e ->
+                    Log.w(TAG, "Failed to sync device token: ${e.message}", e)
+                    // Do not rethrow - syncing device token must not crash the app
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to obtain device token: ${e.message}", e)
+            }
+        }
     }
 
     private fun updateRegisterOtpState(result: RegistrationResult.OtpSent) {

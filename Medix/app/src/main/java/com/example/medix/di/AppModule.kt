@@ -1,10 +1,13 @@
 package com.example.medix.di
 
+import android.content.Context
 import com.example.medix.BuildConfig
 import com.example.medix.core.auth.*
 import com.example.medix.core.network.*
 import com.example.medix.core.network.SupabaseProvider
 import com.example.medix.data.repositories.*
+import com.example.medix.data.sources.local.TokenDataStore
+import com.example.medix.data.sources.local.dao.NotificationDao
 import com.example.medix.domain.repositories.*
 import com.example.medix.services.AudioPlayer
 import com.example.medix.services.AudioRecorder
@@ -111,6 +114,15 @@ object AppModule {
             .build()
     }
 
+
+    @Provides
+    @Singleton
+    fun provideTokenDataStore(
+        @ApplicationContext context: Context
+    ): TokenDataStore {
+        return TokenDataStore(context)
+    }
+
     // =========================
     // AUTH REPOSITORY
     // =========================
@@ -159,6 +171,12 @@ object AppModule {
     fun provideVoiceApi(@Named("iaRetrofit") retrofit: Retrofit): ApiService =
         retrofit.create(ApiService::class.java)
 
+    @Provides
+    @Singleton
+    fun provideDeviceApi(@Named("dataRetrofit") retrofit: Retrofit): DeviceApi =
+        retrofit.create(DeviceApi::class.java)
+
+
 
 
     // =========================
@@ -196,6 +214,16 @@ object AppModule {
     fun providePacienteRepository(api: PacienteApiService): PacienteRepository =
         PacienteRepositoryImpl(api)
 
+
+    @Provides
+    @Singleton
+    fun provideDeviceRepository(
+        api: DeviceApi,
+        sessionManager: SessionManager,
+        tokenDataStore: TokenDataStore
+    ): DeviceRepository =
+        DeviceRepositoryImpl(api, sessionManager, tokenDataStore)
+
     @Provides
     @Singleton
     fun provideVoiceRepository(
@@ -203,6 +231,15 @@ object AppModule {
         webSocketClient: WebSocketClient
     ): VoiceRepository =
         VoiceRepositoryImpl(api, webSocketClient)
+
+
+    @Provides
+    @Singleton
+    fun provideNotificationRepository(
+        dao: NotificationDao
+    ): NotificationRepository {
+        return NotificationRepositoryImpl(dao)
+    }
 
     // =========================
     // AUDIO

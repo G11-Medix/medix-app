@@ -15,7 +15,7 @@ import com.example.medix.presentation.viewmodels.voice.VoiceViewModel
 private const val CONFIRMATION_PAYLOAD_KEY = "confirmation_payload"
 
 @Composable
-fun NavGraph() {
+fun NavGraph(initialRoute: String? = null) {
 
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = hiltViewModel()
@@ -31,6 +31,7 @@ fun NavGraph() {
     val startDestination = when {
         !sessionState.isLoggedIn -> Screen.Login.route
         !sessionState.hasAcceptedConsent -> Screen.Consent.route
+        initialRoute != null -> initialRoute  // Navegar a notificaciones si viene desde la notificación
         else -> Screen.Schedule.route
     }
 

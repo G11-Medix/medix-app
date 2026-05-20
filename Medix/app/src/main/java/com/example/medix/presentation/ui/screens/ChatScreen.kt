@@ -37,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.viewmodels.chat.ChatMessage
 import com.example.medix.presentation.viewmodels.chat.ChatViewModel
+// removed SharedNotificationViewModel import
 
 @Composable
 fun ChatScreen(
@@ -46,6 +47,7 @@ fun ChatScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+
 
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {

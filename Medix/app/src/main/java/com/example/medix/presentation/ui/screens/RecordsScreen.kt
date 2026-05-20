@@ -25,7 +25,6 @@ import com.example.medix.presentation.ui.components.records.EmptyState
 import com.example.medix.presentation.ui.components.records.RecordsColumn
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
-
 @Composable
 fun RecordsScreen(
     currentRoute: String,
@@ -35,6 +34,7 @@ fun RecordsScreen(
 
     val viewModel: AppointmentViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
+
 
     val configuration = LocalConfiguration.current
     val isLandscape =
