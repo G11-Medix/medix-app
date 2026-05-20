@@ -25,9 +25,11 @@ class MainActivity : ComponentActivity() {
             getSharedPreferences("osm", MODE_PRIVATE)
         )
 
+        val initialRoute = intent?.getStringExtra("route")
+
         setContent {
             MedixTheme {
-                NavGraph()
+                NavGraph(initialRoute = initialRoute)
             }
         }
     }

@@ -465,9 +465,17 @@ class AuthViewModel @Inject constructor(
 
     private fun syncDeviceToken() {
         viewModelScope.launch {
-            val token = tokenStorage.getToken().firstOrNull() ?: return@launch
-
-            deviceRepository.sendFcmToken(token)
+            try {
+                val token = tokenStorage.getToken().firstOrNull() ?: return@launch
+                runCatching {
+                    deviceRepository.sendFcmToken(token)
+                }.onFailure { e ->
+                    Log.w(TAG, "Failed to sync device token: ${e.message}", e)
+                    // Do not rethrow - syncing device token must not crash the app
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to obtain device token: ${e.message}", e)
+            }
         }
     }
 

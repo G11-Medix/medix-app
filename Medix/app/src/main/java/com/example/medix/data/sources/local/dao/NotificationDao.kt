@@ -14,4 +14,13 @@ interface NotificationDao {
 
     @Query("DELETE FROM notifications WHERE timestamp < :limit")
     suspend fun deleteOld(limit: Long): Int
+
+    @Query("DELETE FROM notifications WHERE id = :id")
+    suspend fun deleteById(id: Int): Int
+
+    @Query("UPDATE notifications SET isRead = 1 WHERE id = :id")
+    suspend fun markAsRead(id: Int): Int
+
+    @Query("UPDATE notifications SET isRead = 1")
+    suspend fun markAllAsRead(): Int
 }

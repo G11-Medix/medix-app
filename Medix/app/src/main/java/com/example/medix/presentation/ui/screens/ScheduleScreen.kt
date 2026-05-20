@@ -22,7 +22,6 @@ import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 import com.example.medix.domain.entities.Appointment
 import com.example.medix.presentation.ui.components.schedule.ContentState
-
 @Composable
 fun ScheduleScreen(
     currentRoute: String,
@@ -32,6 +31,7 @@ fun ScheduleScreen(
 ) {
     val viewModel: AppointmentViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
+
 
     Box(
         modifier = Modifier

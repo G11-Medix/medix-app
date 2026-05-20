@@ -22,9 +22,11 @@ class NotificationRepositoryImpl @Inject constructor(
 
         return dao.getAll().map {
             Notification(
+                id = it.id,
                 title = it.title,
                 body = it.body,
-                timestamp = it.timestamp
+                timestamp = it.timestamp,
+                isRead = it.isRead
             )
         }
     }
@@ -37,5 +39,17 @@ class NotificationRepositoryImpl @Inject constructor(
                 timestamp = notification.timestamp
             )
         )
+    }
+
+    override suspend fun deleteNotification(id: Int) {
+        dao.deleteById(id)
+    }
+
+    override suspend fun markAsRead(id: Int) {
+        dao.markAsRead(id)
+    }
+
+    override suspend fun markAllAsRead() {
+        dao.markAllAsRead()
     }
 }

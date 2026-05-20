@@ -24,7 +24,8 @@ object NotificationModule {
             context,
             NotificationDatabase::class.java,
             "medix_db"
-        ).build()
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

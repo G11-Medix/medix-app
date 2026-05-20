@@ -9,5 +9,6 @@ data class NotificationEntity(
     val id: Int = 0,
     val title: String,
     val body: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val isRead: Boolean = false
 )

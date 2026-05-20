@@ -11,18 +11,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medix.domain.entities.Notification
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.notification.NotificationCard
 import com.example.medix.presentation.viewmodels.notification.NotificationViewModel
 
-
 @Composable
 fun NotificationsScreen(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    viewModel: NotificationViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    viewModel: NotificationViewModel = hiltViewModel()
 ) {
 
     val state by viewModel.uiState.collectAsState()
@@ -90,7 +90,9 @@ fun NotificationsScreen(
                             Text("No hay notificaciones")
                         }
                     } else {
-                        LazyColumn {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             items(notifications) { notification ->
                                 NotificationCard(notification)
                             }

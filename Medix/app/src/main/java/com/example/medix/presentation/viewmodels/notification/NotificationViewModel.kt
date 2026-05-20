@@ -21,6 +21,11 @@ class NotificationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiState<List<Notification>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<Notification>>> = _uiState
 
+    init {
+        loadNotifications()
+        markAllAsRead()
+    }
+
     fun loadNotifications() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
@@ -33,6 +38,40 @@ class NotificationViewModel @Inject constructor(
                 _uiState.value = UiState.Error(
                     e.message ?: "Error al cargar notificaciones"
                 )
+            }
+        }
+    }
+
+    fun deleteNotification(id: Int) {
+        viewModelScope.launch {
+            runCatching {
+                repository.deleteNotification(id)
+            }.onSuccess {
+                loadNotifications()
+            }.onFailure {
+                // ignore failure for delete, could log
+            }
+        }
+    }
+
+    fun markAsRead(id: Int) {
+        viewModelScope.launch {
+            runCatching {
+                repository.markAsRead(id)
+            }.onSuccess {
+                loadNotifications()
+            }.onFailure {
+                // ignore failure for mark as read
+            }
+        }
+    }
+
+    private fun markAllAsRead() {
+        viewModelScope.launch {
+            runCatching {
+                repository.markAllAsRead()
+            }.onFailure {
+                // ignore failure
             }
         }
     }

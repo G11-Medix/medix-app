@@ -8,7 +8,8 @@ import com.example.medix.data.sources.local.entity.NotificationEntity
 
 @Database(
     entities = [NotificationEntity::class],
-    version = 1
+    version = 2,
+    exportSchema = false
 )
 abstract class NotificationDatabase : RoomDatabase() {
 
