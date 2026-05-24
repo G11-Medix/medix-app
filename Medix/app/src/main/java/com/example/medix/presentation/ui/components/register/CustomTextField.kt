@@ -1,16 +1,14 @@
 package com.example.medix.presentation.ui.components.register
 
-
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
 
 @Composable
 fun CustomTextField(
@@ -23,6 +21,11 @@ fun CustomTextField(
         onValueChange = onChange,
         label = { Text(label) },
         modifier = Modifier.fillMaxWidth(),
-        singleLine = true
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            focusedBorderColor = MaterialTheme.colorScheme.primary
+        )
     )
 }

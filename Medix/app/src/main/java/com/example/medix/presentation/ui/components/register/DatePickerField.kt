@@ -63,7 +63,12 @@ fun DatePickerField(
                         showDialog = true
                     }
                 }
-            }
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            focusedBorderColor = MaterialTheme.colorScheme.primary
+        )
     )
 
     if (showDialog) {

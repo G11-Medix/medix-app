@@ -33,7 +33,19 @@ class ChatViewModel @Inject constructor(
     private var lastRequestText: String? = null
 
     init {
-        bootstrapConversation()
+        showConsentMessage()
+    }
+
+    private fun showConsentMessage() {
+        val message = ChatMessage(
+            isUser = false,
+            text = "Para usar el chat de Medix, autorizas el tratamiento de los datos necesarios para procesar tu solicitud de citas médicas. ¿Deseas continuar?",
+            options = listOf(
+                ChatOptionUi(id = "CONSENT_ACCEPT", label = "Aceptar", enabled = true),
+                ChatOptionUi(id = "CONSENT_CANCEL", label = "Cancelar", enabled = true)
+            )
+        )
+        _uiState.update { it.copy(messages = listOf(message)) }
     }
 
     fun onInputChanged(value: String) {
@@ -42,7 +54,7 @@ class ChatViewModel @Inject constructor(
 
     fun sendInputText() {
         val text = uiState.value.input.trim()
-        if (text.isBlank() || uiState.value.isLoading) return
+        if (text.isBlank() || uiState.value.isLoading || !uiState.value.isConsentAccepted) return
 
         _uiState.update { it.copy(input = "") }
         sendMessage(text = text, appendUserMessage = true)
@@ -57,30 +69,73 @@ class ChatViewModel @Inject constructor(
     ) {
         if (!enabled || uiState.value.isLoading) return
 
+        if (!uiState.value.isConsentAccepted) {
+            when (optionId) {
+                "CONSENT_ACCEPT" -> {
+                    _uiState.update { it.copy(isConsentAccepted = true) }
+                    appendMessage(ChatMessage(isUser = true, text = "Aceptar"))
+                    bootstrapConversation()
+                }
+                "CONSENT_CANCEL" -> {
+                    appendMessage(ChatMessage(isUser = true, text = "Cancelar"))
+                    appendMessage(
+                        ChatMessage(
+                            isUser = false,
+                            text = "Entiendo. Para usar el chat debes aceptar el tratamiento de datos. Puedes volver a intentarlo cuando quieras."
+                        )
+                    )
+                }
+            }
+            return
+        }
+
         val normalizedPayload = normalizeForCompare(optionPayloadText ?: "")
-        if (normalizedPayload == "mas fechas") {
-            android.util.Log.d(
-                "ChatViewModel",
-                "Opción 'Mas fechas' detectada -> enviando text='mas fechas'"
-            )
+        val normalizedLabel = normalizeForCompare(optionLabel)
+
+        if (normalizedPayload == "confirmar" || normalizedPayload == "no" || normalizedPayload == "mas fechas") {
+            android.util.Log.d("ChatViewModel", "Special payload detected: $normalizedPayload")
             sendMessage(
-                text = "mas fechas",
+                text = normalizedPayload,
                 appendUserMessage = true,
+                userMessageOverride = optionLabel,
                 optionId = null,
                 optionIndex = null,
             )
             return
         }
 
-        val shouldUseOptionId = optionId == "cancel_appointment" || optionLabel.contains("cancel", ignoreCase = true)
+        // Semantic mapping for labels if payload is not explicit
+        if (normalizedLabel.contains("confirmar cita") || normalizedLabel == "confirmar") {
+            sendMessage(
+                text = "confirmar",
+                appendUserMessage = true,
+                userMessageOverride = optionLabel,
+                optionId = null,
+                optionIndex = null,
+            )
+            return
+        }
+        if (normalizedLabel.contains("no, cambiar") || normalizedLabel == "no") {
+            sendMessage(
+                text = "no",
+                appendUserMessage = true,
+                userMessageOverride = optionLabel,
+                optionId = null,
+                optionIndex = null,
+            )
+            return
+        }
+
+        val shouldUseOptionId = optionId == "cancel_appointment" || normalizedLabel.contains("cancel")
         if (shouldUseOptionId) {
             android.util.Log.d(
                 "ChatViewModel",
-                "Cancelación detectada -> enviando solo text='3' sin option_id ni option_index"
+                "Cancelación detectada -> enviando indexVisible=$indexVisible"
             )
             sendMessage(
                 text = indexVisible.toString(),
                 appendUserMessage = true,
+                userMessageOverride = optionLabel,
                 optionId = null,
                 optionIndex = null,
             )
@@ -90,6 +145,7 @@ class ChatViewModel @Inject constructor(
         sendMessage(
             text = indexVisible.toString(),
             appendUserMessage = true,
+            userMessageOverride = optionLabel,
             optionId = optionId,
             optionIndex = if (!optionId.isNullOrBlank()) indexVisible else null,
         )
@@ -127,6 +183,7 @@ class ChatViewModel @Inject constructor(
     private fun sendMessage(
         text: String,
         appendUserMessage: Boolean,
+        userMessageOverride: String? = null,
         optionId: String? = null,
         optionIndex: Int? = null,
     ) {
@@ -144,7 +201,7 @@ class ChatViewModel @Inject constructor(
             appendMessage(
                 ChatMessage(
                     isUser = true,
-                    text = text,
+                    text = userMessageOverride ?: text,
                 )
             )
         }
@@ -382,6 +439,7 @@ data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val appointmentConfirmation: AppointmentConfirmationDto? = null,
     val navigateToConfirmation: Boolean = false,
+    val isConsentAccepted: Boolean = false,
 )
 
 data class ChatMessage(

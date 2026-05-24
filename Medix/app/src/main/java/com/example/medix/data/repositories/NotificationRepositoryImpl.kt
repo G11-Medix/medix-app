@@ -14,13 +14,14 @@ class NotificationRepositoryImpl @Inject constructor(
     private val dao: NotificationDao
 ) : NotificationRepository {
 
-    override suspend fun getNotifications(): List<Notification> {
+    override suspend fun getNotifications(pacienteId: Long?): List<Notification> {
+        val scopedPacienteId = pacienteId ?: return emptyList()
 
         val oneDayAgo = System.currentTimeMillis() - (24 * 60 * 60 * 1000)
 
-        dao.deleteOld(oneDayAgo)
+        dao.deleteOld(oneDayAgo, scopedPacienteId)
 
-        return dao.getAll().map {
+        return dao.getByPacienteId(scopedPacienteId).map {
             Notification(
                 id = it.id,
                 title = it.title,
@@ -31,9 +32,10 @@ class NotificationRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveNotification(notification: Notification) {
+    override suspend fun saveNotification(notification: Notification, pacienteId: Long?) {
         dao.insert(
             NotificationEntity(
+                pacienteId = pacienteId ?: -1,
                 title = notification.title,
                 body = notification.body,
                 timestamp = notification.timestamp
@@ -49,7 +51,7 @@ class NotificationRepositoryImpl @Inject constructor(
         dao.markAsRead(id)
     }
 
-    override suspend fun markAllAsRead() {
-        dao.markAllAsRead()
+    override suspend fun markAllAsRead(pacienteId: Long?) {
+        pacienteId?.let { dao.markAllAsRead(it) }
     }
 }

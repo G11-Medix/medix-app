@@ -35,6 +35,14 @@ fun RecordsScreen(
     val viewModel: AppointmentViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
 
+    var selectedAppointment by remember { mutableStateOf<com.example.medix.domain.entities.Appointment?>(null) }
+
+    if (selectedAppointment != null) {
+        com.example.medix.presentation.ui.components.schedule.AppointmentDetailBottomSheet(
+            appointment = selectedAppointment!!,
+            onDismiss = { selectedAppointment = null }
+        )
+    }
 
     val configuration = LocalConfiguration.current
     val isLandscape =
@@ -111,6 +119,7 @@ fun RecordsScreen(
 
                     val upcoming = viewModel.upcomingAppointments
                     val past = viewModel.pastAppointments
+                    val cancelled = viewModel.cancelledAppointments
 
                     if (data.isEmpty()) {
 
@@ -118,19 +127,55 @@ fun RecordsScreen(
 
                     } else {
 
-                        if (isLandscape) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
+                            if (isLandscape) {
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+
+                                    RecordsColumn(
+                                        title = "Próximas citas",
+                                        emptyText = "No tienes citas próximas",
+                                        items = upcoming,
+                                        isPast = false,
+                                        modifier = Modifier.weight(1f),
+                                        onAppointmentClick = { selectedAppointment = it }
+                                    )
+
+                                    RecordsColumn(
+                                        title = "Citas pasadas",
+                                        emptyText = "No tienes citas pasadas",
+                                        items = past,
+                                        isPast = true,
+                                        modifier = Modifier.weight(1f),
+                                        onAppointmentClick = { selectedAppointment = it }
+                                    )
+                                }
+
+                                RecordsColumn(
+                                    title = "Citas canceladas",
+                                    emptyText = "No tienes citas canceladas",
+                                    items = cancelled,
+                                    isPast = true,
+                                    onAppointmentClick = { selectedAppointment = it }
+                                )
+
+                            } else {
 
                                 RecordsColumn(
                                     title = "Próximas citas",
                                     emptyText = "No tienes citas próximas",
                                     items = upcoming,
                                     isPast = false,
-                                    modifier = Modifier.weight(1f)
+                                    onAppointmentClick = { selectedAppointment = it }
                                 )
 
                                 RecordsColumn(
@@ -138,27 +183,17 @@ fun RecordsScreen(
                                     emptyText = "No tienes citas pasadas",
                                     items = past,
                                     isPast = true,
-                                    modifier = Modifier.weight(1f)
+                                    onAppointmentClick = { selectedAppointment = it }
+                                )
+
+                                RecordsColumn(
+                                    title = "Citas canceladas",
+                                    emptyText = "No tienes citas canceladas",
+                                    items = cancelled,
+                                    isPast = true,
+                                    onAppointmentClick = { selectedAppointment = it }
                                 )
                             }
-
-                        } else {
-
-                            RecordsColumn(
-                                title = "Próximas citas",
-                                emptyText = "No tienes citas próximas",
-                                items = upcoming,
-                                isPast = false
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            RecordsColumn(
-                                title = "Citas pasadas",
-                                emptyText = "No tienes citas pasadas",
-                                items = past,
-                                isPast = true
-                            )
                         }
                     }
                 }

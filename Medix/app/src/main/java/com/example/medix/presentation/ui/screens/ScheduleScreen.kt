@@ -18,10 +18,14 @@ import com.example.medix.presentation.ui.components.*
 import com.example.medix.presentation.ui.components.schedule.AppointmentSection
 import com.example.medix.presentation.ui.components.schedule.GreetingSection
 import com.example.medix.presentation.ui.components.schedule.VoiceCard
+import com.example.medix.presentation.ui.components.schedule.AppointmentDetailBottomSheet
 import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 import com.example.medix.domain.entities.Appointment
 import com.example.medix.presentation.ui.components.schedule.ContentState
+import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
+import com.example.medix.data.dto.UserProfileDto
+
 @Composable
 fun ScheduleScreen(
     currentRoute: String,
@@ -32,6 +36,23 @@ fun ScheduleScreen(
     val viewModel: AppointmentViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
 
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+    val profileState by profileViewModel.uiState.collectAsState()
+
+    var selectedAppointment by remember { mutableStateOf<Appointment?>(null) }
+
+    LaunchedEffect(Unit) {
+        profileViewModel.loadProfile()
+    }
+
+    val userName = (profileState as? UiState.Success<UserProfileDto>)?.data?.nombres
+
+    if (selectedAppointment != null) {
+        AppointmentDetailBottomSheet(
+            appointment = selectedAppointment!!,
+            onDismiss = { selectedAppointment = null }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -51,11 +72,49 @@ fun ScheduleScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            GreetingSection()
+            GreetingSection(userName = userName)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            VoiceCard(onMicClick = onStartVoice)
+            var showConsent by remember { mutableStateOf(false) }
+
+            VoiceCard(onMicClick = { showConsent = true })
+
+            if (showConsent) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showConsent = false },
+                    title = { Text(text = "Autorización para uso de datos", style = MaterialTheme.typography.titleMedium) },
+                    text = {
+                        Text(
+                            text = "Al iniciar el asistente de voz autorizas el uso y tratamiento de datos necesarios para procesar tu solicitud. Puedes cancelar si no deseas continuar.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showConsent = false
+                                onStartVoice()
+                            },
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text("Aceptar")
+                        }
+                    },
+                    dismissButton = {
+                        OutlinedButton(
+                            onClick = { showConsent = false },
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text("Cancelar")
+                        }
+                    },
+                    properties = androidx.compose.ui.window.DialogProperties(
+                        dismissOnBackPress = true,
+                        dismissOnClickOutside = false
+                    )
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -63,7 +122,8 @@ fun ScheduleScreen(
                 state = state,
                 viewModel = viewModel,
                 onNavigate = onNavigate,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                onAppointmentClick = { selectedAppointment = it }
             )
         }
 

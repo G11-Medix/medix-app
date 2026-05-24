@@ -22,12 +22,18 @@ fun PastAppointmentCard(
     date: String,
     state: String,
     logo_url: String,
+    onClick: () -> Unit = {}
 ) {
+    val visualState = getVisualState(state, isPast = true)
+    val isCancelled = visualState.lowercase() in setOf("cancelled", "canceled", "cancelada", "cancelado")
+    
     Card(
         shape = RoundedCornerShape(16.dp),
+        onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isCancelled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
         ),
+        elevation = if (isCancelled) CardDefaults.cardElevation(defaultElevation = 0.dp) else CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
 
@@ -80,15 +86,17 @@ fun PastAppointmentCard(
             }
 
             val visualState = getVisualState(state, isPast = true)
+            val stateColor = getStateColor(visualState)
+            
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = getStateColor(visualState).copy(alpha = 0.7f) // más suave
+                color = if (isCancelled) stateColor.copy(alpha = 0.12f) else stateColor.copy(alpha = 0.7f)
             ) {
                 Text(
                     text = formatState(visualState),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White
+                    color = if (isCancelled) stateColor else Color.White
                 )
             }
         }

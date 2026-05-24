@@ -7,8 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,32 +16,31 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import com.example.medix.presentation.ui.theme.ButtonSecondary
 
 @Composable
 fun CallControls(
     isMicPressed: Boolean,
-    isMuted: Boolean,
-    onSpeaker: () -> Unit,
     onMicHoldStart: () -> Unit,
     onMicHoldEnd: () -> Unit,
 ) {
 
     Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxWidth()
     ) {
 
+        // Only show the microphone control (larger and centered) — audio button removed by spec
         HoldControlButton(
             icon = if (isMicPressed) Icons.Default.Mic else Icons.Default.MicOff,
-            label = "Micrófono",
+            isActive = isMicPressed,
             onHoldStart = onMicHoldStart,
             onHoldEnd = onMicHoldEnd,
-        )
-
-        ControlButton(
-            icon = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
-            label = "Audio",
-            onClick = onSpeaker
         )
     }
 }
@@ -52,20 +49,20 @@ fun CallControls(
 @Composable
 private fun HoldControlButton(
     icon: ImageVector,
-    label: String,
+    isActive: Boolean,
     onHoldStart: () -> Unit,
     onHoldEnd: () -> Unit,
 ) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(110.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
 
         Box(
             modifier = Modifier
-                .size(64.dp) // WCAG touch target
-                .background(Color.LightGray, CircleShape)
+                .size(80.dp)
+                .background(ButtonSecondary, CircleShape)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onPress = {
@@ -74,20 +71,28 @@ private fun HoldControlButton(
                             onHoldEnd()
                         }
                     )
+                }
+                .semantics {
+                    contentDescription = "Micrófono ${if (isActive) "activo" else "inactivo"}"
+                    role = Role.Button
                 },
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 icon,
-                contentDescription = label
+                contentDescription = null,
+                tint = Color.White
             )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = label,
-            fontSize = 12.sp
+            text = "Mantén presionado para hablar",
+            fontSize = 15.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 }
@@ -97,6 +102,7 @@ private fun HoldControlButton(
 fun ControlButton(
     icon: ImageVector,
     label: String,
+    isActive: Boolean,
     onClick: () -> Unit,
 ) {
 
@@ -107,17 +113,25 @@ fun ControlButton(
 
         Box(
             modifier = Modifier
-                .size(64.dp)
-                .background(Color.LightGray, CircleShape)
+                .size(64.dp) // ✅ WCAG touch target mínimo 48x48dp
+                // ✅ ACCESIBILIDAD: Reemplazar Color.LightGray con ButtonSecondary (contraste 3:1+)
+                .background(ButtonSecondary, CircleShape)
                 .pointerInput(Unit) {
                     detectTapGestures { onClick() }
+                }
+                // ✅ ACCESIBILIDAD: Agregar semántica para lector de pantalla
+                .semantics {
+                    contentDescription = "$label ${if (isActive) "activo" else "inactivo"}"
+                    role = Role.Button
                 },
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 icon,
-                contentDescription = label
+                contentDescription = null, // Padre tiene descripción
+                tint = Color.White
             )
+
         }
 
         Spacer(modifier = Modifier.height(6.dp))

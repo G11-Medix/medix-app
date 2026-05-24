@@ -55,14 +55,21 @@ class AppointmentViewModel @Inject constructor(
     val upcomingAppointments: List<Appointment>
         get() = (_uiState.value as? UiState.Success)
             ?.data
-            ?.filter { it.toLocalDateTime().isAfter(LocalDateTime.now()) }
+            ?.filter { !it.isCancelled() && it.toLocalDateTime().isAfter(LocalDateTime.now()) }
             ?.sortedBy { it.toLocalDateTime() }
             ?: emptyList()
 
     val pastAppointments: List<Appointment>
         get() = (_uiState.value as? UiState.Success)
             ?.data
-            ?.filter { it.toLocalDateTime().isBefore(LocalDateTime.now()) }
+            ?.filter { !it.isCancelled() && it.toLocalDateTime().isBefore(LocalDateTime.now()) }
+            ?.sortedByDescending { it.toLocalDateTime() }
+            ?: emptyList()
+
+    val cancelledAppointments: List<Appointment>
+        get() = (_uiState.value as? UiState.Success)
+            ?.data
+            ?.filter { it.isCancelled() }
             ?.sortedByDescending { it.toLocalDateTime() }
             ?: emptyList()
 
@@ -71,5 +78,10 @@ class AppointmentViewModel @Inject constructor(
         val date = LocalDate.parse(this.date)
         val time = LocalTime.parse(this.hour)
         return LocalDateTime.of(date, time)
+    }
+
+    private fun Appointment.isCancelled(): Boolean {
+        val s = state.trim().lowercase()
+        return s in setOf("cancelled", "canceled", "cancelada", "cancelado")
     }
 }

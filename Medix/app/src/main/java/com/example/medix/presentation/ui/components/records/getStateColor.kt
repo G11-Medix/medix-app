@@ -6,22 +6,22 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun getStateColor(state: String): Color {
-    return when (state.trim().lowercase()) {
-        "scheduled" -> Color(0xFF4CAF50)
-        "cancelled" -> Color(0xFFF44336)
-        "completed" -> Color(0xFF2196F3) // azul
-        "attended" -> Color(0xFF2196F3)
+    val s = state.trim().lowercase()
+    return when {
+        s == "scheduled" -> Color(0xFF4CAF50)
+        s in setOf("cancelled", "canceled", "cancelada", "cancelado") -> Color(0xFFF44336)
+        s in setOf("completed", "attended") -> Color(0xFF2196F3)
         else -> MaterialTheme.colorScheme.primary
     }
 }
 
-
 fun formatState(state: String): String {
-    return when (state.trim().lowercase()) {
-        "scheduled" -> "Agendada"
-        "cancelled" -> "Cancelada"
-        "completed" -> "Finalizada"
-        "attended" -> "Atendida"
+    val s = state.trim().lowercase()
+    return when {
+        s == "scheduled" -> "Agendada"
+        s in setOf("cancelled", "canceled", "cancelada", "cancelado") -> "Cancelada"
+        s == "completed" -> "Finalizada"
+        s == "attended" -> "Atendida"
         else -> state
     }
 }

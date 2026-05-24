@@ -23,9 +23,11 @@ fun AppointmentCard(
     date: String,
     state: String,
     logo_url: String,
+    onClick: () -> Unit = {}
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

@@ -1,7 +1,6 @@
 package com.example.medix.presentation.ui.components.voice
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,15 +26,16 @@ fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2FB)),
         modifier = modifier
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(24.dp)) {
 
             Text(
                 text = title,
                 fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF1565C0)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Box(
                 modifier = Modifier
@@ -51,8 +51,9 @@ fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
                         ) {
                             Text(
                                 text = content.text,
-                                fontSize = 16.sp,
-                                lineHeight = 22.sp,
+                                fontSize = 17.sp,
+                                lineHeight = 26.sp,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -68,7 +69,11 @@ fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun NumberedOptionsContent(content: AssistantVoiceContent.NumberedOptions) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
         Text(
             text = content.title.trimEnd(':') + ":",
             style = MaterialTheme.typography.titleSmall,
@@ -77,31 +82,23 @@ private fun NumberedOptionsContent(content: AssistantVoiceContent.NumberedOption
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 220.dp)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                )
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(content.options, key = { it.number }) { option ->
+            content.options.forEach { option ->
                 OptionRow(option)
             }
 
             if (!content.footer.isNullOrBlank()) {
-                item {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = content.footer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp,
-                    )
-                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = content.footer,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 20.sp,
+                )
             }
         }
     }

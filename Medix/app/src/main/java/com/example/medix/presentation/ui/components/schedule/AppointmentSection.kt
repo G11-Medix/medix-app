@@ -18,21 +18,25 @@ import com.example.medix.presentation.ui.components.records.AppointmentCard
 fun AppointmentSection(
     appointments: List<Appointment>,
     onSeeAllClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAppointmentClick: (Appointment) -> Unit = {},
 ) {
     Column(modifier = modifier.fillMaxSize()) {
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             Text(
                 text = "Próximas citas",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
 
             Text(
                 text = "Ver todas",
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable { onSeeAllClick() }
             )
@@ -59,7 +63,8 @@ fun AppointmentSection(
                             appointment.hour
                         ),
                         state = appointment.state,
-                        logo_url = appointment.logo_url
+                        logo_url = appointment.logo_url,
+                        onClick = { onAppointmentClick(appointment) }
                     )
                 }
             }

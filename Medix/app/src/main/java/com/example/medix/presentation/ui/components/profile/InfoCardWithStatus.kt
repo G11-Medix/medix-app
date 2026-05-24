@@ -3,9 +3,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.material3.*
-
 import androidx.compose.runtime.Composable
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,12 +11,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.medix.presentation.ui.theme.TextSecondary
+
 @Composable
 fun InfoCardWithStatus(
     icon: ImageVector,
     title: String,
     value: String,
-    status: String
+    status: String,
+    iconContentDescription: String = title // ✅ ACCESIBILIDAD: Descripción del ícono
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -31,13 +32,22 @@ fun InfoCardWithStatus(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Icon(icon, contentDescription = null)
+            // ✅ ACCESIBILIDAD: contentDescription para ícono
+            Icon(
+                icon,
+                contentDescription = iconContentDescription,
+                tint = LocalTextStyle.current.color
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontSize = 10.sp, color = Color.Gray)
+                // ✅ ACCESIBILIDAD: Reemplazado Color.Gray con TextSecondary (contraste 4.5+:1)
+                Text(
+                    title,
+                    fontSize = 10.sp,
+                    color = TextSecondary
+                )
                 Text(value, fontWeight = FontWeight.Bold)
             }
 

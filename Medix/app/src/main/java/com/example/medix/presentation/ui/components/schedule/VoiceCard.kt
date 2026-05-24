@@ -20,6 +20,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 fun VoiceCard(
     onMicClick: () -> Unit
 ) {
+    // Hacemos todo el card clickable para cumplir el criterio de accesibilidad
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -36,6 +39,11 @@ fun VoiceCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 140.dp)
+            .clickable { onMicClick() }
+            .semantics {
+                contentDescription = "Iniciar asistente de voz"
+                role = Role.Button
+            }
     ) {
         Column(
             modifier = Modifier
@@ -46,18 +54,14 @@ fun VoiceCard(
 
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(72.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable { onMicClick() }
-                    .semantics {
-                        contentDescription = "Iniciar asistente de voz"
-                    },
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
-                    contentDescription = null,
+                    contentDescription = null, // Padre ya tiene descripción
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }

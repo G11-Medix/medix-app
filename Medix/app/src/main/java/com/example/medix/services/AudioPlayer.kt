@@ -16,6 +16,7 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
     private var isReady = false
     private var pendingText: String? = null
     private var pendingId: String? = null
+    private var onCompletion: (() -> Unit)? = null
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
@@ -28,6 +29,19 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
                 textToSpeech.setSpeechRate(0.95f)
                 textToSpeech.setPitch(1.0f)
                 isReady = true
+                
+                textToSpeech.setOnUtteranceProgressListener(object : android.speech.tts.UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) {
+                        if (utteranceId?.startsWith("MEDIX_LAST") == true) {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                onCompletion?.invoke()
+                            }
+                        }
+                    }
+                    override fun onError(utteranceId: String?) {}
+                })
+                
                 Log.d("AudioPlayer", "Ready to speak")
                 flushPendingText()
             } else {
@@ -38,14 +52,17 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
         }
     }
 
-    fun speak(text: String, isMuted: Boolean) {
+    fun speak(text: String, isMuted: Boolean, onDone: (() -> Unit)? = null) {
+        this.onCompletion = onDone
         if (isMuted) {
             Log.d("AudioPlayer", "Muted → not speaking")
+            onDone?.invoke()
             return
         }
 
         if (text.isBlank()) {
             Log.w("AudioPlayer", "Attempting to speak blank text")
+            onDone?.invoke()
             return
         }
 
@@ -57,31 +74,30 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
         }
 
         val chunks = splitForTts(text)
-        var first = true
-
+        
         chunks.forEachIndexed { index, chunk ->
-            val queueMode = if (first) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            val utteranceId = "MEDIX_TTS_${System.currentTimeMillis()}_$index"
+            val queueMode = if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+            val isLast = index == chunks.lastIndex
+            val utteranceId = if (isLast) "MEDIX_LAST_${System.currentTimeMillis()}" else "MEDIX_CHUNK_$index"
 
             val result = textToSpeech.speak(chunk, queueMode, null, utteranceId)
 
             if (result == TextToSpeech.ERROR) {
-                Log.e("AudioPlayer", "speak() returned ERROR, queuing full text")
-                pendingText = text
-                pendingId = java.util.UUID.randomUUID().toString()
-                return
+                Log.e("AudioPlayer", "speak() returned ERROR")
+                onDone?.invoke()
+                return@forEachIndexed
             }
-
-            first = false
         }
 
         pendingText = null
         pendingId = null
     }
 
-    fun playBase64Audio(base64: String, isMuted: Boolean, fallbackText: String) {
+    fun playBase64Audio(base64: String, isMuted: Boolean, fallbackText: String, onDone: (() -> Unit)? = null) {
+        this.onCompletion = onDone
         if (isMuted) {
             Log.d("AudioPlayer", "Muted → not playing base64 audio")
+            onDone?.invoke()
             return
         }
         try {
@@ -99,12 +115,37 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
                     release()
                     mediaPlayer = null
                     Log.d("AudioPlayer", "MediaPlayer playback completed")
+                    onCompletion?.invoke()
                 }
             }
             Log.d("AudioPlayer", "Playing Edge-TTS audio (${bytes.size} bytes)")
         } catch (e: Exception) {
             Log.e("AudioPlayer", "MediaPlayer failed, falling back to TextToSpeech", e)
-            speak(fallbackText, isMuted)
+            speak(fallbackText, isMuted, onDone)
+        }
+    }
+
+    /**
+     * Stop any current playback (MediaPlayer or TextToSpeech) but keep the TTS engine
+     * initialized so it can be reused immediately afterwards.
+     */
+    fun stopPlayback() {
+        try {
+            mediaPlayer?.let {
+                if (it.isPlaying) it.stop()
+                it.release()
+            }
+            mediaPlayer = null
+        } catch (e: Exception) {
+            Log.e("AudioPlayer", "Error stopping MediaPlayer", e)
+        }
+
+        try {
+            if (isReady) {
+                textToSpeech.stop()
+            }
+        } catch (e: Exception) {
+            Log.e("AudioPlayer", "Error stopping TextToSpeech", e)
         }
     }
 

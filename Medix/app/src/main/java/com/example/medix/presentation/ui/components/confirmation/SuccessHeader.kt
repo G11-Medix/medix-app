@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 
@@ -35,10 +36,10 @@ fun SuccessHeader(
 ) {
     val (bgColor, iconColor, textColor, icon, desc) = when (status) {
         "SUCCESS" -> StatusUI(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.primary,
-            Icons.Default.Check,
+            Color(0xFFE8F5E9),
+            Color(0xFF2E7D32),
+            Color(0xFF1B5E20),
+            Icons.Default.CheckCircle,
             "Confirmación exitosa"
         )
         "PENDING" -> StatusUI(
@@ -52,16 +53,18 @@ fun SuccessHeader(
             MaterialTheme.colorScheme.errorContainer,
             MaterialTheme.colorScheme.error,
             MaterialTheme.colorScheme.error,
-            Icons.Default.Close,
+            Icons.Default.Cancel,
             "Confirmación cancelada"
         )
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(vertical = 16.dp)
+    ) {
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(100.dp)
                 .background(bgColor, CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -69,21 +72,27 @@ fun SuccessHeader(
                 imageVector = icon,
                 contentDescription = desc,
                 tint = iconColor,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(60.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
             color = textColor
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         Text(
             text = message,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
         )
     }
 }

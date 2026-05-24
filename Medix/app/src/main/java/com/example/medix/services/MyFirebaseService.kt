@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
-import com.example.medix.data.repositories.NotificationRepositoryImpl
 import com.example.medix.domain.entities.Notification
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -13,13 +12,13 @@ import com.google.firebase.messaging.RemoteMessage
 import com.example.medix.R
 import com.example.medix.MainActivity
 import com.example.medix.data.sources.local.TokenDataStore
-import com.example.medix.di.NotificationModule
-import com.example.medix.domain.repositories.DeviceRepository
 import com.example.medix.domain.repositories.NotificationRepository
+import com.example.medix.core.auth.SessionManager
 import com.example.medix.presentation.ui.navigation.Screen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,7 +28,8 @@ class MyFirebaseService : FirebaseMessagingService() {
     @Inject
     lateinit var notificationRepository: NotificationRepository
 
-    @Inject lateinit var deviceRepository: DeviceRepository
+    @Inject
+    lateinit var sessionManager: SessionManager
 
     @Inject
     lateinit var tokenDataStore: TokenDataStore
@@ -47,12 +47,13 @@ class MyFirebaseService : FirebaseMessagingService() {
 
         // Save notification once and notify UI
         CoroutineScope(Dispatchers.IO).launch {
-            notificationRepository.saveNotification(notification)
+            val pacienteId = sessionManager.getPacienteId()
+            notificationRepository.saveNotification(notification, pacienteId)
             try {
-                val intent = android.content.Intent("com.example.medix.ACTION_NOTIFICATION_RECEIVED")
+                val intent = Intent("com.example.medix.ACTION_NOTIFICATION_RECEIVED")
                 intent.setPackage(packageName)
                 sendBroadcast(intent)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // ignore
             }
         }
@@ -88,10 +89,6 @@ class MyFirebaseService : FirebaseMessagingService() {
     }
 
     override fun onNewToken(token: String) {
-        super.onNewToken(token)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            tokenDataStore.saveToken(token)
-        }
+        runBlocking(Dispatchers.IO) { tokenDataStore.saveToken(token) }
     }
 }

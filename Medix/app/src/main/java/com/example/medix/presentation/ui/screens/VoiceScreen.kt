@@ -55,7 +55,6 @@ fun VoiceScreen(
     val state by viewModel.uiState.collectAsState()
 
     var isMicPressed by remember { mutableStateOf(false) }
-    var isMuted by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -107,11 +106,6 @@ fun VoiceScreen(
                     ) {
                         CallControls(
                             isMicPressed = isMicPressed,
-                            isMuted = isMuted,
-                            onSpeaker = {
-                                isMuted = !isMuted
-                                viewModel.toggleMute()
-                            },
                             onMicHoldStart = {
                                 isMicPressed = true
                                 if (hasMicPermission) viewModel.startRecording()
@@ -136,18 +130,14 @@ fun VoiceScreen(
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-
-                Spacer(Modifier.height(6.dp))
 
                 ActiveSessionHeader(state.status)
 
-                Spacer(Modifier.height(6.dp))
-
                 AudioVisualizer(state.status)
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(4.dp))
 
                 TranscriptCard(
                     "Asistente Medix:",
@@ -164,11 +154,6 @@ fun VoiceScreen(
 
                     CallControls(
                         isMicPressed = isMicPressed,
-                        isMuted = isMuted,
-                        onSpeaker = {
-                            isMuted = !isMuted
-                            viewModel.toggleMute()
-                        },
                         onMicHoldStart = {
                             isMicPressed = true
                             if (hasMicPermission) viewModel.startRecording()

@@ -1,31 +1,24 @@
 package com.example.medix.presentation.ui.components.profile
+
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
-fun TopBarProfile(
-    onLogout: () -> Unit,
-) {
+fun TopBarProfile() {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
     ) {
-
         Text(
             text = "Mi Perfil",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
-
-        TextButton(onClick = onLogout) {
-            Text("Cerrar sesión")
-        }
     }
 }
