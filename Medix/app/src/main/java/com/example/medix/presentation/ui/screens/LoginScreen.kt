@@ -43,7 +43,7 @@ fun LoginScreen(
         if (isLandscape) {
             Image(
                 painter = painterResource(id = R.drawable.iniciarapp_medix),
-                contentDescription = null,
+                contentDescription = "", // ✅ ACCESIBILIDAD: Imagen decorativa
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(0.62f)
@@ -54,7 +54,7 @@ fun LoginScreen(
         } else {
             Image(
                 painter = painterResource(id = R.drawable.iniciarapp_medix),
-                contentDescription = null,
+                contentDescription = "", // ✅ ACCESIBILIDAD: Imagen decorativa
                 modifier = Modifier
                     .fillMaxSize()
                     .align(Alignment.Center),

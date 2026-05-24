@@ -57,6 +57,27 @@ class ChatViewModel @Inject constructor(
     ) {
         if (!enabled || uiState.value.isLoading) return
 
+        // Map visible confirmation labels to backend-expected short payloads
+        val normalizedLabel = normalizeForCompare(optionLabel)
+        if (normalizedLabel == "confirmar cita" || normalizedLabel == "confirmar") {
+            sendMessage(
+                text = "confirmar",
+                appendUserMessage = true,
+                optionId = null,
+                optionIndex = null,
+            )
+            return
+        }
+        if (normalizedLabel == "no, cambiar algo" || normalizedLabel == "no cambiar algo" || normalizedLabel == "no") {
+            sendMessage(
+                text = "no",
+                appendUserMessage = true,
+                optionId = null,
+                optionIndex = null,
+            )
+            return
+        }
+
         val normalizedPayload = normalizeForCompare(optionPayloadText ?: "")
         if (normalizedPayload == "mas fechas") {
             android.util.Log.d(
@@ -220,7 +241,19 @@ class ChatViewModel @Inject constructor(
 
     private fun appendMessage(message: ChatMessage) {
         _uiState.update { state ->
-            state.copy(messages = state.messages + message)
+            // If the new message is an assistant message that contains options,
+            // disable options in previous assistant messages so only the latest set is active.
+            val newMessages = if (!message.isUser && message.options.isNotEmpty()) {
+                state.messages.map { prev ->
+                    if (!prev.isUser && prev.options.isNotEmpty()) {
+                        prev.copy(options = prev.options.map { it.copy(enabled = false) })
+                    } else prev
+                } + message
+            } else {
+                state.messages + message
+            }
+
+            state.copy(messages = newMessages)
         }
     }
 
@@ -252,7 +285,7 @@ class ChatViewModel @Inject constructor(
         if (text.isBlank()) return emptyList()
 
         val multilineRegex = Regex("""(?m)^\s*(\d+)[.)-]\s+(.+?)\s*$""")
-        val inlineRegex = Regex("""(\d+)[.)-]\s+(.+?)(?=(?:\s+\d+[.)-]\s+)|$)""")
+        val inlineRegex = Regex("""(\d+)[.)-]\s+(.+?)(?=\s+\d+[.)-]\s+|$)""")
 
         val multilineMatches = multilineRegex.findAll(text).toList()
         val matches = if (multilineMatches.size >= 2) {

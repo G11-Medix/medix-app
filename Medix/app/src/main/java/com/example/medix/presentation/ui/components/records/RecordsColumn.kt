@@ -1,8 +1,6 @@
 package com.example.medix.presentation.ui.components.records
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,11 +27,11 @@ fun RecordsColumn(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(items) { it ->
+                items.forEach { it ->
                     if (isPast) {
                         PastAppointmentCard(
                             name = it.name,

@@ -1,7 +1,6 @@
 package com.example.medix.presentation.ui.components.voice
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -68,7 +67,11 @@ fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun NumberedOptionsContent(content: AssistantVoiceContent.NumberedOptions) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
         Text(
             text = content.title.trimEnd(':') + ":",
             style = MaterialTheme.typography.titleSmall,
@@ -77,31 +80,23 @@ private fun NumberedOptionsContent(content: AssistantVoiceContent.NumberedOption
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 220.dp)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                )
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(content.options, key = { it.number }) { option ->
+            content.options.forEach { option ->
                 OptionRow(option)
             }
 
             if (!content.footer.isNullOrBlank()) {
-                item {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = content.footer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp,
-                    )
-                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = content.footer,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 20.sp,
+                )
             }
         }
     }

@@ -55,7 +55,6 @@ fun VoiceScreen(
     val state by viewModel.uiState.collectAsState()
 
     var isMicPressed by remember { mutableStateOf(false) }
-    var isMuted by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -107,11 +106,6 @@ fun VoiceScreen(
                     ) {
                         CallControls(
                             isMicPressed = isMicPressed,
-                            isMuted = isMuted,
-                            onSpeaker = {
-                                isMuted = !isMuted
-                                viewModel.toggleMute()
-                            },
                             onMicHoldStart = {
                                 isMicPressed = true
                                 if (hasMicPermission) viewModel.startRecording()
@@ -164,11 +158,6 @@ fun VoiceScreen(
 
                     CallControls(
                         isMicPressed = isMicPressed,
-                        isMuted = isMuted,
-                        onSpeaker = {
-                            isMuted = !isMuted
-                            viewModel.toggleMute()
-                        },
                         onMicHoldStart = {
                             isMicPressed = true
                             if (hasMicPermission) viewModel.startRecording()

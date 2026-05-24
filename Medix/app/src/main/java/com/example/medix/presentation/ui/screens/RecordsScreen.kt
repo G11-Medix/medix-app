@@ -55,6 +55,7 @@ fun RecordsScreen(
                 .fillMaxSize()
                 .padding(16.dp)
                 .padding(bottom = 80.dp) // espacio navbar
+                .verticalScroll(rememberScrollState())
         ) {
 
             HeaderSection(onNotificationsClick = onNotificationsClick)
@@ -111,6 +112,7 @@ fun RecordsScreen(
 
                     val upcoming = viewModel.upcomingAppointments
                     val past = viewModel.pastAppointments
+                    val cancelled = viewModel.cancelledAppointments
 
                     if (data.isEmpty()) {
 
@@ -124,22 +126,32 @@ fun RecordsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    RecordsColumn(
+                                        title = "Próximas citas",
+                                        emptyText = "No tienes citas próximas",
+                                        items = upcoming,
+                                        isPast = false,
+                                    )
 
-                                RecordsColumn(
-                                    title = "Próximas citas",
-                                    emptyText = "No tienes citas próximas",
-                                    items = upcoming,
-                                    isPast = false,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                RecordsColumn(
-                                    title = "Citas pasadas",
-                                    emptyText = "No tienes citas pasadas",
-                                    items = past,
-                                    isPast = true,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                    RecordsColumn(
+                                        title = "Citas canceladas",
+                                        emptyText = "No tienes citas canceladas",
+                                        items = cancelled,
+                                        isPast = true,
+                                    )
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    RecordsColumn(
+                                        title = "Citas pasadas",
+                                        emptyText = "No tienes citas pasadas",
+                                        items = past,
+                                        isPast = true,
+                                    )
+                                }
                             }
 
                         } else {
@@ -149,6 +161,15 @@ fun RecordsScreen(
                                 emptyText = "No tienes citas próximas",
                                 items = upcoming,
                                 isPast = false
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            RecordsColumn(
+                                title = "Citas canceladas",
+                                emptyText = "No tienes citas canceladas",
+                                items = cancelled,
+                                isPast = true
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -171,6 +192,7 @@ fun RecordsScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .navigationBarsPadding()
         )
     }
 }

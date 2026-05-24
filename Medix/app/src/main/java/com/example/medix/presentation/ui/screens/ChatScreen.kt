@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.viewmodels.chat.ChatMessage
+import com.example.medix.presentation.viewmodels.chat.ChatOptionUi
 import com.example.medix.presentation.viewmodels.chat.ChatViewModel
 // removed SharedNotificationViewModel import
 
@@ -85,7 +89,8 @@ fun ChatScreen(
                     .fillMaxWidth()
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(bottom = 12.dp),
+                // ensure enough bottom padding so options are not obscured by the input/keyboard
+                contentPadding = PaddingValues(bottom = 200.dp),
             ) {
                 items(state.messages, key = { it.id }) { message ->
                     ChatMessageItem(
@@ -205,6 +210,32 @@ private fun ChatMessageItem(
         MaterialTheme.colorScheme.onSurface
     }
 
+    // Detect if this is a confirmation message from the assistant
+    val isConfirmationMessage = !message.isUser &&
+        (message.text.contains(Regex("""(?i)(desea confirmar|confirmar cita|confirmar)""")) ||
+         message.text.contains(Regex("""(?i)voy a agendar""")))
+
+    val confirmationOptions: List<ChatOptionUi> = if (isConfirmationMessage && message.options.isEmpty()) {
+        listOf(
+            ChatOptionUi(
+                id = null,
+                label = "Confirmar cita",
+                enabled = true,
+                payloadText = "confirmar",
+                displayIndex = 1
+            ),
+            ChatOptionUi(
+                id = null,
+                label = "No, cambiar algo",
+                enabled = true,
+                payloadText = "no",
+                displayIndex = 2
+            )
+        )
+    } else {
+        emptyList<ChatOptionUi>()
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (message.isUser) Alignment.End else Alignment.Start,
@@ -238,17 +269,25 @@ private fun ChatMessageItem(
                         )
                     }
 
-                    if (!message.isUser && message.options.isNotEmpty()) {
-                        message.options.forEachIndexed { index, option ->
+                    val optionsToShow = if (confirmationOptions.isNotEmpty()) confirmationOptions else message.options
+
+                    if (!message.isUser && optionsToShow.isNotEmpty()) {
+                        optionsToShow.forEachIndexed { index, option ->
                             val visibleIndex = option.displayIndex ?: (index + 1)
                             OutlinedButton(
                                 onClick = {
                                     onOptionTap(visibleIndex, option.id, option.label, option.payloadText, option.enabled)
                                 },
                                 enabled = option.enabled,
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
                             ) {
-                                Text(text = "$visibleIndex. ${option.label}")
+                                Text(text = "${visibleIndex}. ${option.label}")
                             }
                         }
                     }

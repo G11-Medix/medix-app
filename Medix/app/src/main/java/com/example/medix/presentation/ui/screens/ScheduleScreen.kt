@@ -55,7 +55,45 @@ fun ScheduleScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            VoiceCard(onMicClick = onStartVoice)
+            var showConsent by remember { mutableStateOf(false) }
+
+            VoiceCard(onMicClick = { showConsent = true })
+
+            if (showConsent) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showConsent = false },
+                    title = { Text(text = "Autorización para uso de datos", style = MaterialTheme.typography.titleMedium) },
+                    text = {
+                        Text(
+                            text = "Al iniciar el asistente de voz autorizas el uso y tratamiento de datos necesarios para procesar tu solicitud. Puedes cancelar si no deseas continuar.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showConsent = false
+                                onStartVoice()
+                            },
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text("Aceptar")
+                        }
+                    },
+                    dismissButton = {
+                        OutlinedButton(
+                            onClick = { showConsent = false },
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text("Cancelar")
+                        }
+                    },
+                    properties = androidx.compose.ui.window.DialogProperties(
+                        dismissOnBackPress = true,
+                        dismissOnClickOutside = false
+                    )
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

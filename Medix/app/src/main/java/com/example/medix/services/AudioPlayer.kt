@@ -108,6 +108,30 @@ class AudioPlayer(context: Context) : TextToSpeech.OnInitListener {
         }
     }
 
+    /**
+     * Stop any current playback (MediaPlayer or TextToSpeech) but keep the TTS engine
+     * initialized so it can be reused immediately afterwards.
+     */
+    fun stopPlayback() {
+        try {
+            mediaPlayer?.let {
+                if (it.isPlaying) it.stop()
+                it.release()
+            }
+            mediaPlayer = null
+        } catch (e: Exception) {
+            Log.e("AudioPlayer", "Error stopping MediaPlayer", e)
+        }
+
+        try {
+            if (isReady) {
+                textToSpeech.stop()
+            }
+        } catch (e: Exception) {
+            Log.e("AudioPlayer", "Error stopping TextToSpeech", e)
+        }
+    }
+
     fun release() {
         isReady = false
         pendingText = null

@@ -48,8 +48,8 @@ fun PhoneNumberInput(
 
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp) // 👈 icono más pequeño
+                    contentDescription = "Desplegar selector de país", // ✅ ACCESIBILIDAD: Descripción clara
+                    modifier = Modifier.size(18.dp)
                 )
             }
 

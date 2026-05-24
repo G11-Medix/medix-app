@@ -27,74 +27,82 @@ fun NotificationsScreen(
 
     val state by viewModel.uiState.collectAsState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F7FB))
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background)
     ) {
 
-        Text(
-            "Notificaciones",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .padding(bottom = 80.dp)
+                .widthIn(max = 600.dp)
+        ) {
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                "Notificaciones",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
 
-        Box(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.height(12.dp))
 
-            when (state) {
+            Box(modifier = Modifier.weight(1f)) {
 
-                is UiState.Loading -> {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
+                when (state) {
 
-                is UiState.Error -> {
-                    val error = state as UiState.Error
-
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-                            Text(
-                                text = error.message,
-                                color = Color.Red
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Button(onClick = { viewModel.loadNotifications() }) {
-                                Text("Reintentar")
-                            }
-                        }
-                    }
-                }
-
-                is UiState.Success -> {
-                    val success = state as UiState.Success<List<Notification>>
-                    val notifications = success.data
-
-                    if (notifications.isEmpty()) {
+                    is UiState.Loading -> {
                         Box(
                             Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No hay notificaciones")
+                            CircularProgressIndicator()
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth()
+                    }
+
+                    is UiState.Error -> {
+                        val error = state as UiState.Error
+
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            items(notifications) { notification ->
-                                NotificationCard(notification)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                                Text(
+                                    text = error.message,
+                                    color = Color.Red
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Button(onClick = { viewModel.loadNotifications() }) {
+                                    Text("Reintentar")
+                                }
+                            }
+                        }
+                    }
+
+                    is UiState.Success -> {
+                        val success = state as UiState.Success<List<Notification>>
+                        val notifications = success.data
+
+                        if (notifications.isEmpty()) {
+                            Box(
+                                Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("No hay notificaciones")
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(notifications) { notification ->
+                                    NotificationCard(notification)
+                                }
                             }
                         }
                     }
@@ -104,7 +112,10 @@ fun NotificationsScreen(
 
         BottomNavigationBar(
             currentRoute = currentRoute,
-            onNavigate = onNavigate
+            onNavigate = onNavigate,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
         )
     }
 }

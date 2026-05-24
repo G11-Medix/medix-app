@@ -139,6 +139,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .navigationBarsPadding()
         )
     }
 }

@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class NotificationEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val pacienteId: Long = -1,
     val title: String,
     val body: String,
     val timestamp: Long,

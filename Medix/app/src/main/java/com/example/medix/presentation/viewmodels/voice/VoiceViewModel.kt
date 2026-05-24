@@ -81,6 +81,9 @@ class VoiceViewModel @Inject constructor(
         if (isProcessingAudio || isRecordingPressActive) return
 
         runCatching {
+            // If assistant is speaking, interrupt playback before starting to record
+            try { player.stopPlayback() } catch (_: Exception) {}
+
             currentAudioFile = recorder.start()
             isRecordingPressActive = true
 
