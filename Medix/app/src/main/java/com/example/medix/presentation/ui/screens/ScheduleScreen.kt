@@ -22,6 +22,9 @@ import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.viewmodels.schedule.AppointmentViewModel
 import com.example.medix.domain.entities.Appointment
 import com.example.medix.presentation.ui.components.schedule.ContentState
+import com.example.medix.presentation.viewmodels.profile.ProfileViewModel
+import com.example.medix.data.dto.UserProfileDto
+
 @Composable
 fun ScheduleScreen(
     currentRoute: String,
@@ -32,6 +35,14 @@ fun ScheduleScreen(
     val viewModel: AppointmentViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
 
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+    val profileState by profileViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        profileViewModel.loadProfile()
+    }
+
+    val userName = (profileState as? UiState.Success<UserProfileDto>)?.data?.nombres
 
     Box(
         modifier = Modifier
@@ -51,7 +62,7 @@ fun ScheduleScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            GreetingSection()
+            GreetingSection(userName = userName)
 
             Spacer(modifier = Modifier.height(16.dp))
 

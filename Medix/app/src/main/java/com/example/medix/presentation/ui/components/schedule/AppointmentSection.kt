@@ -24,15 +24,18 @@ fun AppointmentSection(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             Text(
                 text = "Próximas citas",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
 
             Text(
                 text = "Ver todas",
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable { onSeeAllClick() }
             )

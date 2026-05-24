@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import com.example.medix.presentation.ui.theme.ButtonSecondary
 
 @Composable
@@ -55,13 +56,12 @@ private fun HoldControlButton(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(140.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
 
         Box(
             modifier = Modifier
-                .size(80.dp) // agrandado para facilitar toque
-                // ✅ ACCESIBILIDAD: Reemplazar Color.LightGray con ButtonSecondary (contraste 3:1+)
+                .size(80.dp)
                 .background(ButtonSecondary, CircleShape)
                 .pointerInput(Unit) {
                     detectTapGestures(
@@ -72,7 +72,6 @@ private fun HoldControlButton(
                         }
                     )
                 }
-                // ✅ ACCESIBILIDAD: Agregar semántica para lector de pantalla
                 .semantics {
                     contentDescription = "Micrófono ${if (isActive) "activo" else "inactivo"}"
                     role = Role.Button
@@ -81,16 +80,19 @@ private fun HoldControlButton(
         ) {
             Icon(
                 icon,
-                contentDescription = null, // Padre tiene descripción
+                contentDescription = null,
                 tint = Color.White
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Micrófono",
-            fontSize = 14.sp
+            text = "Mantén presionado para hablar",
+            fontSize = 15.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 }

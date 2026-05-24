@@ -54,18 +54,18 @@ fun ActiveSessionHeader(status: ConversationStatus) {
             imageVector = Icons.Default.HealthAndSafety,
             contentDescription = "Estado del asistente: $title",
             tint = InfoBlue,
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier.size(56.dp)
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = title,
             fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
+            fontSize = 18.sp
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically

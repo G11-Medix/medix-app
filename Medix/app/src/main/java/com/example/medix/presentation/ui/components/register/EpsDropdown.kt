@@ -1,7 +1,7 @@
 package com.example.medix.presentation.ui.components.register
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 
@@ -63,13 +63,18 @@ fun EpsDropdown(
             trailingIcon = {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.height(20.dp)
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
                     )
                 } else {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                 }
             },
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary
+            )
         )
 
         ExposedDropdownMenu(

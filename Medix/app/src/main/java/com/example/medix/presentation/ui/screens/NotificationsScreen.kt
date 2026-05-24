@@ -17,6 +17,7 @@ import com.example.medix.presentation.ui.state.UiState
 import com.example.medix.presentation.ui.components.BottomNavigationBar
 import com.example.medix.presentation.ui.components.notification.NotificationCard
 import com.example.medix.presentation.viewmodels.notification.NotificationViewModel
+import com.example.medix.presentation.viewmodels.notification.SharedNotificationViewModel
 
 @Composable
 fun NotificationsScreen(
@@ -24,8 +25,13 @@ fun NotificationsScreen(
     onNavigate: (String) -> Unit,
     viewModel: NotificationViewModel = hiltViewModel()
 ) {
-
     val state by viewModel.uiState.collectAsState()
+    val sharedVm: SharedNotificationViewModel = hiltViewModel()
+
+    // Clear badge when entering screen
+    LaunchedEffect(Unit) {
+        sharedVm.clearBadge()
+    }
 
     Box(
         modifier = Modifier

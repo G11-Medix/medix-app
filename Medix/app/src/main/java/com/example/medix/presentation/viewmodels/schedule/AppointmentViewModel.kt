@@ -81,6 +81,7 @@ class AppointmentViewModel @Inject constructor(
     }
 
     private fun Appointment.isCancelled(): Boolean {
-        return state.trim().lowercase() in setOf("cancelled", "canceled")
+        val s = state.trim().lowercase()
+        return s in setOf("cancelled", "canceled", "cancelada", "cancelado")
     }
 }

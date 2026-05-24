@@ -26,15 +26,16 @@ fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2FB)),
         modifier = modifier
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(24.dp)) {
 
             Text(
                 text = title,
                 fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF1565C0)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Box(
                 modifier = Modifier
@@ -50,8 +51,9 @@ fun TranscriptCard(title: String, text: String, modifier: Modifier = Modifier) {
                         ) {
                             Text(
                                 text = content.text,
-                                fontSize = 16.sp,
-                                lineHeight = 22.sp,
+                                fontSize = 17.sp,
+                                lineHeight = 26.sp,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }

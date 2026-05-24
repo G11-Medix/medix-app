@@ -389,10 +389,28 @@ class VoiceViewModel @Inject constructor(
         }
 
         if (response.isNotBlank()) {
+            val onAudioDone = {
+                // Return to IDLE or LISTENING state after audio finishes
+                _uiState.update { state ->
+                    if (state.status == ConversationStatus.RESPONDING) {
+                        state.copy(status = ConversationStatus.IDLE)
+                    } else state
+                }
+            }
+
             if (!audioBase64.isNullOrEmpty()) {
-                player.playBase64Audio(audioBase64, isMuted = _isMuted.value, fallbackText = response)
+                player.playBase64Audio(
+                    audioBase64,
+                    isMuted = _isMuted.value,
+                    fallbackText = response,
+                    onDone = onAudioDone
+                )
             } else {
-                player.speak(response, isMuted = _isMuted.value)
+                player.speak(
+                    response,
+                    isMuted = _isMuted.value,
+                    onDone = onAudioDone
+                )
             }
         }
     }

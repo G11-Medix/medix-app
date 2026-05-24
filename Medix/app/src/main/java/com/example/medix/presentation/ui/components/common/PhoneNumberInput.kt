@@ -1,6 +1,7 @@
 package com.example.medix.presentation.ui.components.common
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
@@ -29,27 +30,24 @@ fun PhoneNumberInput(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
-        // 🔥 BOTÓN COMPACTO
         Box {
             OutlinedButton(
                 onClick = { expanded = true },
-                contentPadding = PaddingValues(
-                    horizontal = 8.dp,  // 👈 menos espacio lateral
-                    vertical = 4.dp     // 👈 menos altura interna
-                ),
-                modifier = Modifier.height(56.dp) // 👈 igual altura que TextField
+                contentPadding = PaddingValues(horizontal = 12.dp),
+                modifier = Modifier.height(56.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
                     text = "${selectedCountry.flagEmoji} ${selectedCountry.dialCode}",
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyLarge
                 )
 
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Desplegar selector de país", // ✅ ACCESIBILIDAD: Descripción clara
-                    modifier = Modifier.size(18.dp)
+                    contentDescription = "Desplegar selector de país",
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
@@ -75,17 +73,19 @@ fun PhoneNumberInput(
             }
         }
 
-        // 📱 CAMPO TELÉFONO (más espacio)
         OutlinedTextField(
-            modifier = Modifier
-                .weight(1f) // 👈 ocupa todo el espacio restante
-                .height(56.dp),
+            modifier = Modifier.weight(1f),
             value = phoneNumber,
             onValueChange = { input ->
                 onPhoneNumberChange(input.filter(Char::isDigit))
             },
             label = { Text(label) },
             singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary
+            )
         )
     }
 }

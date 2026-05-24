@@ -31,13 +31,18 @@ class SharedNotificationViewModel @Inject constructor(
     fun updateNotificationCount(pacienteId: Long? = null) {
         viewModelScope.launch {
             runCatching {
-                val notifications = repository.getNotifications(pacienteId)
+                val id = pacienteId ?: sessionManager.getPacienteId()
+                val notifications = repository.getNotifications(id)
                 // Count only unread notifications
                 _notificationCount.value = notifications.count { !it.isRead }
             }.onFailure {
                 _notificationCount.value = 0
             }
         }
+    }
+
+    fun clearBadge() {
+        _notificationCount.value = 0
     }
 }
 

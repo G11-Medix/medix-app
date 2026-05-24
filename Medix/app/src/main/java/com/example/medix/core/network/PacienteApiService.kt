@@ -11,7 +11,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface PacienteApiService {
-    @GET("api/eps")
+    @GET("api/eps/")
     suspend fun getEps(): List<EpsDto>
 
     @GET("auth/eligibility/{telefono}")
