@@ -22,12 +22,14 @@ fun PastAppointmentCard(
     date: String,
     state: String,
     logo_url: String,
+    onClick: () -> Unit = {}
 ) {
     val visualState = getVisualState(state, isPast = true)
     val isCancelled = visualState.lowercase() in setOf("cancelled", "canceled", "cancelada", "cancelado")
     
     Card(
         shape = RoundedCornerShape(16.dp),
+        onClick = onClick,
         colors = CardDefaults.cardColors(
             containerColor = if (isCancelled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
         ),

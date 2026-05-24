@@ -18,7 +18,8 @@ import com.example.medix.presentation.ui.components.records.AppointmentCard
 fun AppointmentSection(
     appointments: List<Appointment>,
     onSeeAllClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAppointmentClick: (Appointment) -> Unit = {},
 ) {
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -62,7 +63,8 @@ fun AppointmentSection(
                             appointment.hour
                         ),
                         state = appointment.state,
-                        logo_url = appointment.logo_url
+                        logo_url = appointment.logo_url,
+                        onClick = { onAppointmentClick(appointment) }
                     )
                 }
             }

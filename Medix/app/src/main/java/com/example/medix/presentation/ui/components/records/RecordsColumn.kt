@@ -14,7 +14,8 @@ fun RecordsColumn(
     emptyText: String,
     items: List<com.example.medix.domain.entities.Appointment>,
     isPast: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAppointmentClick: (com.example.medix.domain.entities.Appointment) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
 
@@ -38,7 +39,8 @@ fun RecordsColumn(
                             specialty = it.specialty,
                             date = DateUtils.formatAppointmentDate(it.date, it.hour),
                             state = it.state,
-                            logo_url = it.logo_url
+                            logo_url = it.logo_url,
+                            onClick = { onAppointmentClick(it) }
                         )
                     } else {
                         AppointmentCard(
@@ -46,7 +48,8 @@ fun RecordsColumn(
                             specialty = it.specialty,
                             date = DateUtils.formatAppointmentDate(it.date, it.hour),
                             state = it.state,
-                            logo_url = it.logo_url
+                            logo_url = it.logo_url,
+                            onClick = { onAppointmentClick(it) }
                         )
                     }
                 }
